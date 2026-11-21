@@ -250,7 +250,7 @@ UPGRADE_PRIORITY = [
     "gun_rate", "servos", "gun_mag", "laser_charge", "lightning_efficiency", "lightning_range",
     "capacitor", "reactor", "sensors", "jets", "gun_velocity",
 ]
-P = dict(want_l=22.0, want_g=40.0, want_lz=55.0, weak=0.35, amp=0.9, flip_lo=0.5, flip_hi=1.3, hold_hp=0.6, cube_r=30.0, cube_w=1.6, multi_n=99, multi_hp=0.7, adv_d=70.0, camp=0.5, dodge_t=0.9, strafe_keep=0.7)
+P = dict(want_l=22.0, want_g=40.0, want_lz=55.0, weak=0.35, amp=0.9, flip_lo=0.5, flip_hi=1.3, hold_hp=0.6, cube_r=30.0, cube_w=1.6, multi_n=99, multi_hp=0.7, adv_d=140.0, camp=0.5, dodge_t=0.9, strafe_keep=0.7)
 try:
     P.update(json.loads(os.environ.get("BOT_PARAMS", "{}")))
 except Exception:
@@ -259,7 +259,7 @@ WEAPON_SCORE = {"lightning": 3.0, "laser": 2.0, "mortar": 0.0, "gun": 1.0}
 
 
 class Bot:
-    name = "survivor-v2"
+    name = "survivor-v11"
 
     def __init__(self, hello):
         cfg = hello["config"]
