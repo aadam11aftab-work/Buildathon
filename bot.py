@@ -250,14 +250,14 @@ UPGRADE_PRIORITY = [
     "gun_rate", "servos", "gun_mag", "laser_charge", "lightning_efficiency", "lightning_range",
     "capacitor", "reactor", "sensors", "jets", "gun_velocity",
 ]
-P = dict(want_l=22.0, want_g=28.0, want_lz=38.0, weak=0.35, amp=0.9, flip_lo=0.5, flip_hi=1.3, hold_hp=0.6, cube_r=30.0, cube_w=1.6, multi_n=99, multi_hp=0.7, adv_d=70.0, cover_camp=1, drop_r=120.0, drop_hp=0.6, late_pre=25.0, snd_avoid=1, avoid_s=3.0, tri=1, tri_far=58.0, laser_aim=1, engage_r=999.0, dmg_window=6.0, farm_until=999.0, camp=0.5, dodge_t=0.9, strafe_keep=0.7, v5=1, snipe_d=0.0, v5_open=0, v5_pos=0, v5_hide=0, v5_fight=0, corner_d=35.0, opp_d=60.0, opp_hp=0.6, opp_ratio=1.5, open_s=40.0, camp_late=0.3, loot_r=160.0, cube_roam=90.0)
+P = dict(want_l=22.0, want_g=28.0, want_lz=38.0, weak=0.35, amp=0.9, flip_lo=0.5, flip_hi=1.3, hold_hp=0.6, cube_r=30.0, cube_w=1.6, multi_n=99, multi_hp=0.7, adv_d=70.0, cover_camp=1, drop_r=120.0, drop_hp=0.6, late_pre=25.0, snd_avoid=1, avoid_s=3.0, tri=1, tri_far=58.0, laser_aim=1, engage_r=999.0, dmg_window=6.0, farm_until=999.0, camp=0.5, dodge_t=0.9, strafe_keep=0.7, v5=1, mortar=0, mortar_ws=1.5, mortar_d=110.0, mortar_min=45.0, mortar_max=205.0, snipe_d=0.0, v5_open=0, v5_pos=0, v5_hide=0, v5_fight=0, corner_d=35.0, opp_d=60.0, opp_hp=0.6, opp_ratio=1.5, open_s=40.0, camp_late=0.3, loot_r=160.0, cube_roam=90.0)
 try:
     _ENV = json.loads(os.environ.get("BOT_PARAMS", "{}"))
 except Exception:
     _ENV = {}
 P.update(_ENV)
 # v5 "hide and survive" defaults: applied unless BOT_PARAMS sets v5=0; anything set explicitly in BOT_PARAMS wins.
-V5 = dict(v5_open=0, loot_r=160.0, farm_until=999.0, v5_pos=1, v5_hide=1, v5_fight=0, weak=0.35, adv_d=70.0, cube_w=1.6, cube_r=30.0, cube_roam=90.0, snipe_d=0.0)
+V5 = dict(v5_open=0, loot_r=160.0, farm_until=999.0, v5_pos=1, v5_hide=1, v5_fight=0, weak=0.35, adv_d=70.0, cube_w=1.6, cube_r=30.0, cube_roam=90.0, snipe_d=0.0, mortar=1)
 if _ENV.get("v5", 1):
     for _k, _v in V5.items():
         if _k not in _ENV:
@@ -269,11 +269,13 @@ def wscore(kind):
     """Loot preference. v5 opening prefers the laser (hitscan, outranges mortar), then lightning."""
     if P["v5_open"]:
         return {"laser": 3.0, "lightning": 2.5}.get(kind, 0.0)
+    if kind == "mortar":
+        return P["mortar_ws"] if P["mortar"] else 0.0
     return WEAPON_SCORE.get(kind, 0)
 
 
 class Bot:
-    name = "survivor-v10"
+    name = "survivor-v11"
 
     def __init__(self, hello):
         cfg = hello["config"]
@@ -377,6 +379,50 @@ class Bot:
             d = math.sqrt((px - sx) ** 2 + (py - sy) ** 2 + (pz - sz) ** 2)
             tt = d / max(speed, 1.0) + 0.075
         return px, py, pz
+
+    def mortar_aim(self, sx, sy, sz, tx, ty, tz, tv, v, g):
+        """Low-arc ballistic solution (yaw, pitch, flight time) for a shell with speed v and gravity g, leading tv."""
+        px, py = tx, ty
+        yaw = th = T = None
+        for _ in range(3):
+            dx, dy = px - sx, py - sy
+            R = hypot(dx, dy)
+            h = tz - sz
+            th = None
+            prev = None
+            n = 70
+            for i in range(1, n):
+                a = 0.03 + i * (1.35 / n)
+                c = math.cos(a)
+                err = R * math.tan(a) - g * R * R / (2 * v * v * c * c) - h
+                if prev is not None and prev[1] < 0 <= err:
+                    f = -prev[1] / (err - prev[1])
+                    th = prev[0] + f * (a - prev[0])
+                    break
+                prev = (a, err)
+            if th is None:
+                return None
+            T = R / (v * math.cos(th))
+            yaw = math.atan2(dy, dx)
+            px, py = tx + tv[0] * T, ty + tv[1] * T
+        return yaw, th, T, v, g
+
+    def shell_clear(self, sx, sy, sz, sol):
+        w = self.world
+        if w is None:
+            return True
+        yaw, th, T, v, g = sol
+        vh = v * math.cos(th)
+        vz = v * math.sin(th)
+        tt = 0.15
+        while tt < T - 0.35:
+            px = sx + vh * math.cos(yaw) * tt
+            py = sy + vh * math.sin(yaw) * tt
+            pz = sz + vz * tt - 0.5 * g * tt * tt
+            if pz < max(w.roof(px, py), w.ground(px, py)) + 0.5:
+                return False
+            tt += 0.15
+        return True
 
     def aim_angles(self, sx, sy, sz, tx, ty, tz):
         yaw = math.atan2(ty - sy, tx - sx)
@@ -869,6 +915,19 @@ class Bot:
                     want = max(want, 70.0)               # laser outranges and cooks off mortars
             if P["snipe_d"] and tgt_is_enemy:
                 want = max(want, P["snipe_d"])      # v9: fight from long range, outside an idle bot's reach
+            mort = None
+            mw = next((w_ for w_ in wl if w_ and w_["kind"] == "mortar"), None)
+            if (P["mortar"] and mw is not None and tgt_is_enemy and P["mortar_min"] < d < P["mortar_max"]
+                    and hypot(tv[0], tv[1]) < 2.5):
+                mc = self.cfg["weapons"].get("mortar", {})
+                sol = self.mortar_aim(sx, sy, sz, tp[0], tp[1], tp[2] + 2.0, tv, mc.get("speed", 72.0), mc.get("gravity", 22.0))
+                mech_c = self.cfg.get("mech", {})
+                if (sol is not None and mech_c.get("min_pitch", -1.5) <= sol[1] <= mech_c.get("max_pitch", 1.5)
+                        and self.shell_clear(sx, sy, sz, sol)):
+                    mort = sol
+                    aim = [sol[0], sol[1]]
+                    want = max(want, P["mortar_d"])
+                    self.fight_reason = "mortar"
             n_close = sum(1 for m_ in enemies if hypot(m_["pos"][0] - x, m_["pos"][1] - y) < 70)
             outnumbered = tgt_is_enemy and n_close >= P["multi_n"] and hpf < P["multi_hp"]
             weak = outnumbered or tgt_is_enemy and hpf < P["weak"] and (len(enemies) >= 2 or tgt.get("hp", 700) / max(1, tgt.get("max_hp", 1400)) > hpf)
@@ -886,15 +945,21 @@ class Bot:
                 if kd == "gun":
                     if wk.get("ammo", 1) <= 0:
                         act["reload"] = True
-                    elif tgt_vis and d < st["range"] * 0.92 and yerr < tol_g and perr < tol_gp:
+                    elif mort is None and tgt_vis and d < st["range"] * 0.92 and yerr < tol_g and perr < tol_gp:
                         fire[si] = True
                 elif kd == "lightning":
                     if tgt_vis and d < st["range"] * 0.95 and yerr < 0.2 and energy > 5:
                         fire[si] = True
+                elif kd == "mortar":
+                    if mort is not None and wk["cooldown"] <= 0.05:
+                        ym = abs(wrap(mort[0] - me["aim"][0]))
+                        pm = abs(mort[1] - me["aim"][1])
+                        if ym < max(0.02, math.atan2(3.0, d)) and pm < 0.035:
+                            fire[si] = True
                 elif kd == "laser":
                     full = st["charge"]
                     ch = wk.get("charge", 0.0)
-                    if tgt_vis and d < st["range"] * 0.9 and (d > 18 or ch > 0):
+                    if mort is None and tgt_vis and d < st["range"] * 0.9 and (d > 18 or ch > 0):
                         if ch > 0:
                             if ch >= full - 0.05 and yerr_l < tol_g and perr_l < tol_gp:
                                 fire[si] = False
