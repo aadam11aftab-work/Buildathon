@@ -250,7 +250,7 @@ UPGRADE_PRIORITY = [
     "gun_rate", "servos", "gun_mag", "laser_charge", "lightning_efficiency", "lightning_range",
     "capacitor", "reactor", "sensors", "jets", "gun_velocity",
 ]
-P = dict(want_l=22.0, want_g=40.0, want_lz=55.0, weak=0.35, amp=0.9, flip_lo=0.5, flip_hi=1.3, hold_hp=0.6, cube_r=30.0, cube_w=1.6, multi_n=99, multi_hp=0.7, adv_d=70.0, camp=0.5, dodge_t=0.9, strafe_keep=0.7)
+P = dict(want_l=22.0, want_g=40.0, want_lz=55.0, weak=0.35, amp=0.9, flip_lo=0.5, flip_hi=1.3, hold_hp=0.6, tgt_hp0=0.6, tgt_hpw=1.0, explore=1, explore_until=240.0, explore_hp=0.6, explore_step=70.0, npc_r=60.0, crate_r=70.0, npc_hp=0.5, cube_r=30.0, cube_w=1.6, multi_n=99, multi_hp=0.7, adv_d=70.0, camp=0.5, dodge_t=0.9, strafe_keep=0.7)
 try:
     P.update(json.loads(os.environ.get("BOT_PARAMS", "{}")))
 except Exception:
@@ -259,7 +259,7 @@ WEAPON_SCORE = {"lightning": 3.0, "laser": 2.0, "mortar": 0.0, "gun": 1.0}
 
 
 class Bot:
-    name = "survivor-v2"
+    name = "survivor-v3"
 
     def __init__(self, hello):
         cfg = hello["config"]
@@ -292,6 +292,9 @@ class Bot:
         self.last_move = (0.0, 0.0)
         self.goal_since = {}
         self.upg_taken = {}
+        self.visited = set()
+        self.explore_goal = None
+        self.explore_t = -99.0
         self.path = None
         self.plan_res = None
         self.planning = False
@@ -357,7 +360,8 @@ class Bot:
         best, bi = 999, 0
         for i, c in enumerate(offer["choices"]):
             cid = c["id"]
-            r = UPGRADE_PRIORITY.index(cid) if cid in UPGRADE_PRIORITY else 50
+            pr = P.get("prio") or UPGRADE_PRIORITY
+            r = pr.index(cid) if cid in pr else 50
             if r < best:
                 best, bi = r, i
         return bi
@@ -398,6 +402,10 @@ class Bot:
             if s["kind"] in ("gun", "laser", "lightning", "mortar", "laser_charge", "explosion") and s["dist"] != "far":
                 if self.alert is None or t - self.alert[1] > 1.0:
                     self.alert = (s["bearing"], t - s["age"])
+        step = P["explore_step"]
+        for dx_ in (-40, 0, 40):
+            for dy_ in (-40, 0, 40):
+                self.visited.add((int((x + dx_) // step), int((y + dy_) // step)))
         # stuck history
         self.hist.append((t, x, y))
         while self.hist and t - self.hist[0][0] > 1.5:
@@ -413,6 +421,22 @@ class Bot:
             if d < best:
                 best, bp = d, p
         return bp
+
+    def pick_explore(self, x, y, zc, zr):
+        step = P["explore_step"]
+        best, bp = 1e18, None
+        R = zr - 20
+        n = int(R // step) + 1
+        cx, cy = int(zc[0] // step), int(zc[1] // step)
+        for i in range(cx - n, cx + n + 1):
+            for j in range(cy - n, cy + n + 1):
+                px, py = (i + 0.5) * step, (j + 0.5) * step
+                if hypot(px - zc[0], py - zc[1]) > R or (i, j) in self.visited:
+                    continue
+                sc_ = hypot(px - x, py - y) + 0.3 * hypot(px - zc[0], py - zc[1])
+                if sc_ < best:
+                    best, bp = sc_, (px, py)
+        return self.snap(bp) if bp else None
 
     def snap(self, p):
         w = self.world
@@ -549,16 +573,16 @@ class Bot:
             tz = p[2] + 4.5 * (1 + 0.05 * m.get("cubes", 0))
             vis = True if w is None else w.los(ex, ey, ez, p[0], p[1], tz)
             hpm = m.get("hp", 700) / max(1.0, m.get("max_hp", 1400))
-            score = d * (0.6 + hpm) + (0 if vis else 60)
+            score = d * (P["tgt_hp0"] + P["tgt_hpw"] * hpm) + (0 if vis else 60)
             if d > 230:
                 score += 200
             if score < best:
                 best, tgt, tgt_vis = score, m, vis
-        if tgt is None and hpf > 0.5:
+        if tgt is None and hpf > P["npc_hp"]:
             for m in npcs:
                 p = m["pos"]
                 d = hypot(p[0] - x, p[1] - y)
-                if d > 60 or not in_safe(p[0], p[1], 0):
+                if d > P["npc_r"] or not in_safe(p[0], p[1], 0):
                     continue
                 vis = True if w is None else w.los(ex, ey, ez, p[0], p[1], p[2] + 1.7)
                 if vis and d < best:
@@ -845,7 +869,7 @@ class Bot:
                             if self.blocked_id(i, t):
                                 continue
                             dd = hypot(p[0] - x, p[1] - y)
-                            if dd < 70 and in_safe(p[0], p[1], 5) and p[2] - (w.ground(p[0], p[1]) if w else 0) < 4:
+                            if dd < P["crate_r"] and in_safe(p[0], p[1], 5) and p[2] - (w.ground(p[0], p[1]) if w else 0) < 4:
                                 cands.append((dd, i, p))
                         if cands:
                             cands.sort()
@@ -870,6 +894,15 @@ class Bot:
                                             if wk and wk["kind"] == "lightning" and dd < wk["stats"]["range"] * 0.9 and energy > 30:
                                                 fire[si] = True
                                 label = "crate"
+                    if goal is None and move is None and P["explore"] and t < P["explore_until"] and hpf > P["explore_hp"]:
+                        eg = self.explore_goal
+                        if eg is None or t - self.explore_t > 25 or hypot(eg[0] - x, eg[1] - y) < 20 or not in_safe(eg[0], eg[1], 15):
+                            self.explore_goal = self.pick_explore(x, y, zc, zr)
+                            self.explore_t = t
+                            eg = self.explore_goal
+                        if eg is not None:
+                            goal = eg
+                            label = "explore"
                     if goal is None and move is None:
                         dc = hypot(camp[0] - x, camp[1] - y)
                         if dc > 8:
