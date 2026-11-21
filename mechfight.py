@@ -443,42 +443,42 @@ class Draw:
     def clear(self) -> None:
         self._d: DebugDraw = {}
 
-    def _room(self, key: str, cap: str) -> bool:
-        return len(self._d.get(key, [])) < self.caps.get(cap, 1e9)  # type: ignore[arg-type]
+    def _room(self, v_key: str, v_cap: str) -> bool:
+        return len(self._d.get(v_key, [])) < self.caps.get(v_cap, 1e9)  # type: ignore[arg-type]
 
-    def line(self, a: List[float], b: List[float], color: Optional[str] = None) -> None:
+    def line(self, v_a: List[float], v_b: List[float], color_val: Optional[str] = None) -> None:
         if self._room("lines", "max_lines"):
-            it: DebugLine = {"a": [float(v) for v in a[:3]], "b": [float(v) for v in b[:3]]}
-            if color:
-                it["color"] = color
-            self._d.setdefault("lines", []).append(it)
+            v_it: DebugLine = {"a": [float(v_v) for v_v in v_a[:3]], "b": [float(v_v) for v_v in v_b[:3]]}
+            if color_val:
+                v_it["color"] = color_val
+            self._d.setdefault("lines", []).append(v_it)
 
-    def point(self, at: List[float], color: Optional[str] = None, size: Optional[float] = None) -> None:
+    def point(self, v_at: List[float], color_val2: Optional[str] = None, size_val: Optional[float] = None) -> None:
         if self._room("points", "max_points"):
-            it: DebugPoint = {"at": [float(v) for v in at[:3]]}
-            if color:
-                it["color"] = color
-            if size is not None:
-                it["size"] = size
-            self._d.setdefault("points", []).append(it)
+            v_it2: DebugPoint = {"at": [float(v_v2) for v_v2 in v_at[:3]]}
+            if color_val2:
+                v_it2["color"] = color_val2
+            if size_val is not None:
+                v_it2["size"] = size_val
+            self._d.setdefault("points", []).append(v_it2)
 
-    def text(self, text: str, at: Optional[List[float]] = None, color: Optional[str] = None) -> None:
+    def text(self, text_val: str, v_at2: Optional[List[float]] = None, color_val3: Optional[str] = None) -> None:
         """Text at a world point, or (without `at`) stacked above your mech."""
         if self._room("text", "max_text"):
-            it: DebugText = {"text": str(text)}
-            if at is not None:
-                it["at"] = [float(v) for v in at[:3]]
-            if color:
-                it["color"] = color
-            self._d.setdefault("text", []).append(it)
+            v_it3: DebugText = {"text": str(text_val)}
+            if v_at2 is not None:
+                v_it3["at"] = [float(v_v3) for v_v3 in v_at2[:3]]
+            if color_val3:
+                v_it3["color"] = color_val3
+            self._d.setdefault("text", []).append(v_it3)
 
-    def label(self, text: str) -> None:
+    def label(self, text_val2: str) -> None:
         """One short status line above your mech."""
-        self._d["label"] = str(text)
+        self._d["label"] = str(text_val2)
 
     def take(self) -> Optional[DebugDraw]:
-        d, self._d = self._d, {}
-        return d or None
+        v_d, self._d = self._d, {}
+        return v_d or None
 
 
 draw = Draw()
@@ -490,76 +490,76 @@ def log(*args: Any) -> None:
     print(*args, file=sys.stderr, flush=True)
 
 
-def _send(msg: Dict[str, Any]) -> None:
-    sys.stdout.write(json.dumps(msg, separators=(",", ":")) + "\n")
+def _send(v_msg: Dict[str, Any]) -> None:
+    sys.stdout.write(json.dumps(v_msg, separators=(",", ":")) + "\n")
     sys.stdout.flush()
 
 
-def _reader(q: "queue.Queue[Optional[str]]") -> None:
-    for line in sys.stdin:
-        if line.strip():
-            q.put(line)
-    q.put(None)
+def _reader(v_q: "queue.Queue[Optional[str]]") -> None:
+    for line_val in sys.stdin:
+        if line_val.strip():
+            v_q.put(line_val)
+    v_q.put(None)
 
 
-def run(make_bot: Any) -> None:
+def run(make_bot_val: Any) -> None:
     """Run a bot until the match ends. `make_bot(hello)` returns an object with `act(obs) -> Action`
     and optionally `name`. A class works: `run(MyBot)`."""
-    q: "queue.Queue[Optional[str]]" = queue.Queue()
-    threading.Thread(target=_reader, args=(q,), daemon=True).start()
-    bot = None
-    last: Dict[str, Any] = {}
-    errors = 0
+    v_q2: "queue.Queue[Optional[str]]" = queue.Queue()
+    threading.Thread(target=_reader, args=(v_q2,), daemon=True).start()
+    v_bot = None
+    last_val: Dict[str, Any] = {}
+    errors_val = 0
     while True:
-        batch = [q.get()]
+        batch_val = [v_q2.get()]
         while True:  # drain the queue: only the newest observation matters
             try:
-                batch.append(q.get_nowait())
+                batch_val.append(v_q2.get_nowait())
             except queue.Empty:
                 break
-        latest = None
-        for raw in batch:
-            if raw is None:
+        latest_val = None
+        for v_raw in batch_val:
+            if v_raw is None:
                 return
             try:
-                msg = json.loads(raw)
+                v_msg2 = json.loads(v_raw)
             except ValueError:
                 continue
-            kind = msg.get("type")
-            if kind == "hello":
-                draw.caps = msg.get("config", {}).get("debug", {})
+            kind_val = v_msg2.get("type")
+            if kind_val == "hello":
+                draw.caps = v_msg2.get("config", {}).get("debug", {})
                 try:
-                    bot = make_bot(msg)
+                    v_bot = make_bot_val(v_msg2)
                 except Exception:
                     log(traceback.format_exc())
-                name = getattr(bot, "name", None) or getattr(make_bot, "__name__", "bot")
-                _send({"type": "ready", "name": str(name)[:32]})
-            elif kind == "obs":
-                latest = msg
-            elif kind == "end":
+                name_val = getattr(v_bot, "name", None) or getattr(make_bot_val, "__name__", "bot")
+                _send({"type": "ready", "name": str(name_val)[:32]})
+            elif kind_val == "obs":
+                latest_val = v_msg2
+            elif kind_val == "end":
                 return
-        if latest is None:
+        if latest_val is None:
             continue
-        action: Dict[str, Any] = {}
+        action_val: Dict[str, Any] = {}
         draw.clear()
-        if bot is not None:
+        if v_bot is not None:
             try:
-                action = dict(bot.act(latest) or {})
-                last = {k: action[k] for k in _CONTINUOUS if k in action}
+                action_val = dict(v_bot.act(latest_val) or {})
+                last_val = {v_k: action_val[v_k] for v_k in _CONTINUOUS if v_k in action_val}
             except Exception:
-                errors += 1
-                if errors <= 5 or errors % 100 == 0:
-                    log(f"act() failed at tick {latest['tick']} ({errors} so far):\n{traceback.format_exc()}")
-                action = dict(last)
-        action["tick"] = latest["tick"]
-        d = draw.take()
-        if d and "debug" not in action:
-            action["debug"] = d
+                errors_val += 1
+                if errors_val <= 5 or errors_val % 100 == 0:
+                    log(f"act() failed at tick {latest_val['tick']} ({errors_val} so far):\n{traceback.format_exc()}")
+                action_val = dict(last_val)
+        action_val["tick"] = latest_val["tick"]
+        v_d2 = draw.take()
+        if v_d2 and "debug" not in action_val:
+            action_val["debug"] = v_d2
         try:
-            _send(action)
+            _send(action_val)
         except (TypeError, ValueError):  # something in the action isn't JSON
-            log(f"unserializable action at tick {latest['tick']}:\n{traceback.format_exc()}")
-            _send({"tick": latest["tick"], **last})
+            log(f"unserializable action at tick {latest_val['tick']}:\n{traceback.format_exc()}")
+            _send({"tick": latest_val["tick"], **last_val})
 
 
 if __name__ == "__main__":

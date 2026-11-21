@@ -14,232 +14,232 @@ PI = math.pi
 hypot = math.hypot
 
 
-def wrap(a):
-    return (a + PI) % (2 * PI) - PI
+def wrap(v_a):
+    return (v_a + PI) % (2 * PI) - PI
 
 
-def clamp(v, a, b):
-    return a if v < a else b if v > b else v
+def clamp(v_v, v_a2, v_b):
+    return v_a2 if v_v < v_a2 else v_b if v_v > v_b else v_v
 
 
 # ----------------------------------------------------------------------------- map
 class World:
-    def __init__(self, mapdir):
+    def __init__(self, mapdir_val):
         self.ok = False
-        base = os.path.join(mapdir, "v2")
-        with open(os.path.join(base, "world.json")) as f:
-            wj = json.load(f)
-        tr = wj["terrain"]
-        self.nx, self.ny = tr["nx"], tr["ny"]
-        self.minx, self.miny, self.st = tr["minX"], tr["minY"], tr["step"]
-        g = array("h")
-        with open(os.path.join(base, tr["file"]), "rb") as f:
-            g.frombytes(f.read())
+        base_val = os.path.join(mapdir_val, "v2")
+        with open(os.path.join(base_val, "world.json")) as v_f:
+            v_wj = json.load(v_f)
+        v_tr = v_wj["terrain"]
+        self.nx, self.ny = v_tr["nx"], v_tr["ny"]
+        self.minx, self.miny, self.st = v_tr["minX"], v_tr["minY"], v_tr["step"]
+        v_g = array("h")
+        with open(os.path.join(base_val, v_tr["file"]), "rb") as v_f:
+            v_g.frombytes(v_f.read())
         if sys.byteorder != "little":
-            g.byteswap()
-        self.g = g
+            v_g.byteswap()
+        self.g = v_g
         self.bh = array("f", [-1000.0]) * (self.nx * self.ny)
-        for p in wj["prisms"]:
-            if p["kind"] == "bridge":
+        for v_p in v_wj["prisms"]:
+            if v_p["kind"] == "bridge":
                 continue
             try:
-                self._fill(p)
+                self._fill(v_p)
             except Exception:
                 pass
-        b = wj["bounds"]
-        self.bx0, self.bx1, self.by0, self.by1 = b["minX"], b["maxX"], b["minY"], b["maxY"]
+        v_b2 = v_wj["bounds"]
+        self.bx0, self.bx1, self.by0, self.by1 = v_b2["minX"], v_b2["maxX"], v_b2["minY"], v_b2["maxY"]
         try:
             self.build_grid()
         except Exception:
             self.blk = None
         self.ok = True
 
-    def _fill(self, p):
-        top = p["top"]
-        edges = []
-        rings = [p["ring"]]
-        for h in p.get("holes") or []:
-            rings.append(h)
-        ymin, ymax = 1e9, -1e9
-        for ring in rings:
-            n = len(ring) // 2
-            for k in range(n):
-                x0, y0 = ring[2 * k], ring[2 * k + 1]
-                k2 = (k + 1) % n
-                x1, y1 = ring[2 * k2], ring[2 * k2 + 1]
-                if y0 != y1:
-                    edges.append((x0, y0, x1, y1))
-                ymin = min(ymin, y0)
-                ymax = max(ymax, y0)
-        st, minx, miny, nx, ny, bh = self.st, self.minx, self.miny, self.nx, self.ny, self.bh
-        j0 = max(0, int(math.ceil((ymin - miny) / st)))
-        j1 = min(ny - 1, int(math.floor((ymax - miny) / st)))
-        for j in range(j0, j1 + 1):
-            yc = miny + j * st
-            xs = []
-            for x0, y0, x1, y1 in edges:
-                if (y0 <= yc < y1) or (y1 <= yc < y0):
-                    xs.append(x0 + (yc - y0) * (x1 - x0) / (y1 - y0))
-            xs.sort()
-            row = j * nx
-            for q in range(0, len(xs) - 1, 2):
-                i0 = max(0, int(math.ceil((xs[q] - minx) / st)))
-                i1 = min(nx - 1, int(math.floor((xs[q + 1] - minx) / st)))
-                for i in range(i0, i1 + 1):
-                    if bh[row + i] < top:
-                        bh[row + i] = top
+    def _fill(self, v_p2):
+        v_top = v_p2["top"]
+        edges_val = []
+        rings_val = [v_p2["ring"]]
+        for v_h in v_p2.get("holes") or []:
+            rings_val.append(v_h)
+        ymin_val, ymax_val = 1e9, -1e9
+        for ring_val in rings_val:
+            v_n = len(ring_val) // 2
+            for v_k in range(v_n):
+                v_x0, v_y0 = ring_val[2 * v_k], ring_val[2 * v_k + 1]
+                v_k2 = (v_k + 1) % v_n
+                v_x1, v_y1 = ring_val[2 * v_k2], ring_val[2 * v_k2 + 1]
+                if v_y0 != v_y1:
+                    edges_val.append((v_x0, v_y0, v_x1, v_y1))
+                ymin_val = min(ymin_val, v_y0)
+                ymax_val = max(ymax_val, v_y0)
+        v_st, minx_val, miny_val, v_nx, v_ny, v_bh = self.st, self.minx, self.miny, self.nx, self.ny, self.bh
+        v_j0 = max(0, int(math.ceil((ymin_val - miny_val) / v_st)))
+        v_j1 = min(v_ny - 1, int(math.floor((ymax_val - miny_val) / v_st)))
+        for v_j in range(v_j0, v_j1 + 1):
+            v_yc = miny_val + v_j * v_st
+            v_xs = []
+            for v_x0, v_y0, v_x1, v_y1 in edges_val:
+                if (v_y0 <= v_yc < v_y1) or (v_y1 <= v_yc < v_y0):
+                    v_xs.append(v_x0 + (v_yc - v_y0) * (v_x1 - v_x0) / (v_y1 - v_y0))
+            v_xs.sort()
+            v_row = v_j * v_nx
+            for v_q in range(0, len(v_xs) - 1, 2):
+                v_i0 = max(0, int(math.ceil((v_xs[v_q] - minx_val) / v_st)))
+                v_i1 = min(v_nx - 1, int(math.floor((v_xs[v_q + 1] - minx_val) / v_st)))
+                for v_i in range(v_i0, v_i1 + 1):
+                    if v_bh[v_row + v_i] < v_top:
+                        v_bh[v_row + v_i] = v_top
 
-    def build_grid(self, cs=3.0):
+    def build_grid(self, v_cs=3.0):
         import heapq  # noqa: F401
-        self.cs = cs
+        self.cs = v_cs
         self.gx0, self.gy0 = self.bx0 + 3, self.by0 + 3
-        self.gw = int((self.bx1 - self.bx0 - 6) / cs)
-        self.gh = int((self.by1 - self.by0 - 6) / cs)
-        blk = bytearray(self.gw * self.gh)
-        bh, g = self.bh, self.g
-        pts = ((0.5, 0.5), (0.2, 0.2), (0.8, 0.2), (0.2, 0.8), (0.8, 0.8))
-        for j in range(self.gh):
-            y0 = self.gy0 + j * cs
-            for i in range(self.gw):
-                x0 = self.gx0 + i * cs
-                nb = 0
-                cen = 0
-                for q, (fx, fy) in enumerate(pts):
-                    k = self.idx(x0 + fx * cs, y0 + fy * cs)
-                    if bh[k] > g[k] * 0.01 + 1.3:
-                        nb += 1
-                        if q == 0:
-                            cen = 1
-                blk[j * self.gw + i] = 1 if (cen or nb >= 2) else 0
-        self.blk = blk
+        self.gw = int((self.bx1 - self.bx0 - 6) / v_cs)
+        self.gh = int((self.by1 - self.by0 - 6) / v_cs)
+        v_blk = bytearray(self.gw * self.gh)
+        v_bh2, v_g2 = self.bh, self.g
+        v_pts = ((0.5, 0.5), (0.2, 0.2), (0.8, 0.2), (0.2, 0.8), (0.8, 0.8))
+        for v_j2 in range(self.gh):
+            v_y02 = self.gy0 + v_j2 * v_cs
+            for v_i2 in range(self.gw):
+                v_x02 = self.gx0 + v_i2 * v_cs
+                v_nb = 0
+                v_cen = 0
+                for v_q2, (v_fx, v_fy) in enumerate(v_pts):
+                    v_k3 = self.idx(v_x02 + v_fx * v_cs, v_y02 + v_fy * v_cs)
+                    if v_bh2[v_k3] > v_g2[v_k3] * 0.01 + 1.3:
+                        v_nb += 1
+                        if v_q2 == 0:
+                            v_cen = 1
+                v_blk[v_j2 * self.gw + v_i2] = 1 if (v_cen or v_nb >= 2) else 0
+        self.blk = v_blk
 
-    def cell(self, x, y):
-        i = int((x - self.gx0) / self.cs)
-        j = int((y - self.gy0) / self.cs)
-        return clamp(i, 0, self.gw - 1), clamp(j, 0, self.gh - 1)
+    def cell(self, v_x, v_y):
+        v_i3 = int((v_x - self.gx0) / self.cs)
+        v_j3 = int((v_y - self.gy0) / self.cs)
+        return clamp(v_i3, 0, self.gw - 1), clamp(v_j3, 0, self.gh - 1)
 
-    def nearest_open(self, i, j):
-        if not self.blk[j * self.gw + i]:
-            return i, j
-        for r in range(1, 12):
-            for di in range(-r, r + 1):
-                for dj in range(-r, r + 1):
-                    if max(abs(di), abs(dj)) != r:
+    def nearest_open(self, v_i4, v_j4):
+        if not self.blk[v_j4 * self.gw + v_i4]:
+            return v_i4, v_j4
+        for v_r in range(1, 12):
+            for v_di in range(-v_r, v_r + 1):
+                for v_dj in range(-v_r, v_r + 1):
+                    if max(abs(v_di), abs(v_dj)) != v_r:
                         continue
-                    a, b = i + di, j + dj
-                    if 0 <= a < self.gw and 0 <= b < self.gh and not self.blk[b * self.gw + a]:
-                        return a, b
-        return i, j
+                    v_a3, v_b3 = v_i4 + v_di, v_j4 + v_dj
+                    if 0 <= v_a3 < self.gw and 0 <= v_b3 < self.gh and not self.blk[v_b3 * self.gw + v_a3]:
+                        return v_a3, v_b3
+        return v_i4, v_j4
 
-    def plan(self, sx, sy, gx, gy, max_nodes=60000):
+    def plan(self, v_sx, v_sy, v_gx, v_gy, max_nodes_val=60000):
         import heapq
-        gw, gh, blk, cs = self.gw, self.gh, self.blk, self.cs
-        si, sj = self.nearest_open(*self.cell(sx, sy))
-        ti, tj = self.nearest_open(*self.cell(gx, gy))
-        start, goal = sj * gw + si, tj * gw + ti
-        if start == goal:
-            return [(gx, gy)]
-        gd = self.g
-        dist = {start: 0.0}
-        prev = {}
-        W_ = 1.5
-        h0 = max(abs(si - ti), abs(sj - tj)) + 0.414 * min(abs(si - ti), abs(sj - tj))
-        pq = [(h0 * W_, start)]
-        closed = set()
-        best, besth = start, h0
-        n = 0
-        SQ = 1.4142
-        while pq and n < max_nodes:
-            _, cur = heapq.heappop(pq)
-            if cur in closed:
+        v_gw, v_gh, v_blk2, v_cs2 = self.gw, self.gh, self.blk, self.cs
+        v_si, v_sj = self.nearest_open(*self.cell(v_sx, v_sy))
+        v_ti, v_tj = self.nearest_open(*self.cell(v_gx, v_gy))
+        start_val, goal_val = v_sj * v_gw + v_si, v_tj * v_gw + v_ti
+        if start_val == goal_val:
+            return [(v_gx, v_gy)]
+        v_gd = self.g
+        dist_val = {start_val: 0.0}
+        prev_val = {}
+        v_W_ = 1.5
+        v_h0 = max(abs(v_si - v_ti), abs(v_sj - v_tj)) + 0.414 * min(abs(v_si - v_ti), abs(v_sj - v_tj))
+        v_pq = [(v_h0 * v_W_, start_val)]
+        closed_val = set()
+        best_val, besth_val = start_val, v_h0
+        v_n2 = 0
+        v_SQ = 1.4142
+        while v_pq and v_n2 < max_nodes_val:
+            _, v_cur = heapq.heappop(v_pq)
+            if v_cur in closed_val:
                 continue
-            closed.add(cur)
-            n += 1
-            if cur == goal:
-                best = cur
+            closed_val.add(v_cur)
+            v_n2 += 1
+            if v_cur == goal_val:
+                best_val = v_cur
                 break
-            ci, cj = cur % gw, cur // gw
-            dcur = dist[cur]
-            gcur = gd[self.idx(self.gx0 + (ci + 0.5) * cs, self.gy0 + (cj + 0.5) * cs)] * 0.01
-            for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
-                a, b = ci + di, cj + dj
-                if a < 0 or b < 0 or a >= gw or b >= gh:
+            v_ci, v_cj = v_cur % v_gw, v_cur // v_gw
+            dcur_val = dist_val[v_cur]
+            gcur_val = v_gd[self.idx(self.gx0 + (v_ci + 0.5) * v_cs2, self.gy0 + (v_cj + 0.5) * v_cs2)] * 0.01
+            for v_di2, v_dj2 in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+                v_a4, v_b4 = v_ci + v_di2, v_cj + v_dj2
+                if v_a4 < 0 or v_b4 < 0 or v_a4 >= v_gw or v_b4 >= v_gh:
                     continue
-                nb = b * gw + a
-                if blk[nb] or nb in closed:
+                v_nb2 = v_b4 * v_gw + v_a4
+                if v_blk2[v_nb2] or v_nb2 in closed_val:
                     continue
-                if di and dj and (blk[cj * gw + a] or blk[b * gw + ci]):
+                if v_di2 and v_dj2 and (v_blk2[v_cj * v_gw + v_a4] or v_blk2[v_b4 * v_gw + v_ci]):
                     continue  # no corner cutting
-                gn = gd[self.idx(self.gx0 + (a + 0.5) * cs, self.gy0 + (b + 0.5) * cs)] * 0.01
-                if abs(gn - gcur) > 3.2:
+                v_gn = v_gd[self.idx(self.gx0 + (v_a4 + 0.5) * v_cs2, self.gy0 + (v_b4 + 0.5) * v_cs2)] * 0.01
+                if abs(v_gn - gcur_val) > 3.2:
                     continue
-                nd = dcur + (SQ if di and dj else 1.0) + abs(gn - gcur) * 0.3
-                if nd < dist.get(nb, 1e18):
-                    dist[nb] = nd
-                    prev[nb] = cur
-                    hh = max(abs(a - ti), abs(b - tj)) + 0.414 * min(abs(a - ti), abs(b - tj))
-                    if hh < besth:
-                        besth, best = hh, nb
-                    heapq.heappush(pq, (nd + W_ * hh, nb))
-        path = []
-        c = best
-        while c != start:
-            path.append((self.gx0 + (c % gw + 0.5) * cs, self.gy0 + (c // gw + 0.5) * cs))
-            c = prev[c]
-        path.reverse()
-        if best == goal:
-            path.append((gx, gy))
-        return path
+                v_nd = dcur_val + (v_SQ if v_di2 and v_dj2 else 1.0) + abs(v_gn - gcur_val) * 0.3
+                if v_nd < dist_val.get(v_nb2, 1e18):
+                    dist_val[v_nb2] = v_nd
+                    prev_val[v_nb2] = v_cur
+                    v_hh = max(abs(v_a4 - v_ti), abs(v_b4 - v_tj)) + 0.414 * min(abs(v_a4 - v_ti), abs(v_b4 - v_tj))
+                    if v_hh < besth_val:
+                        besth_val, best_val = v_hh, v_nb2
+                    heapq.heappush(v_pq, (v_nd + v_W_ * v_hh, v_nb2))
+        path_val = []
+        v_c = best_val
+        while v_c != start_val:
+            path_val.append((self.gx0 + (v_c % v_gw + 0.5) * v_cs2, self.gy0 + (v_c // v_gw + 0.5) * v_cs2))
+            v_c = prev_val[v_c]
+        path_val.reverse()
+        if best_val == goal_val:
+            path_val.append((v_gx, v_gy))
+        return path_val
 
-    def line_free(self, ax, ay, bx, by, z):
-        d = hypot(bx - ax, by - ay)
-        n = int(d / 1.5) + 1
-        for k in range(1, n + 1):
-            f = k / n
-            px, py = ax + (bx - ax) * f, ay + (by - ay) * f
-            if not self.free(px, py, z, 3.0):
+    def line_free(self, v_ax, v_ay, v_bx, v_by, v_z):
+        v_d = hypot(v_bx - v_ax, v_by - v_ay)
+        v_n3 = int(v_d / 1.5) + 1
+        for v_k4 in range(1, v_n3 + 1):
+            v_f2 = v_k4 / v_n3
+            v_px, v_py = v_ax + (v_bx - v_ax) * v_f2, v_ay + (v_by - v_ay) * v_f2
+            if not self.free(v_px, v_py, v_z, 3.0):
                 return False
             # clearance: sides
         return True
 
-    def idx(self, x, y):
-        i = int((x - self.minx) / self.st + 0.5)
-        j = int((y - self.miny) / self.st + 0.5)
-        if i < 0:
-            i = 0
-        elif i >= self.nx:
-            i = self.nx - 1
-        if j < 0:
-            j = 0
-        elif j >= self.ny:
-            j = self.ny - 1
-        return j * self.nx + i
+    def idx(self, v_x2, v_y2):
+        v_i5 = int((v_x2 - self.minx) / self.st + 0.5)
+        v_j5 = int((v_y2 - self.miny) / self.st + 0.5)
+        if v_i5 < 0:
+            v_i5 = 0
+        elif v_i5 >= self.nx:
+            v_i5 = self.nx - 1
+        if v_j5 < 0:
+            v_j5 = 0
+        elif v_j5 >= self.ny:
+            v_j5 = self.ny - 1
+        return v_j5 * self.nx + v_i5
 
-    def ground(self, x, y):
-        return self.g[self.idx(x, y)] * 0.01
+    def ground(self, v_x3, v_y3):
+        return self.g[self.idx(v_x3, v_y3)] * 0.01
 
-    def roof(self, x, y):
-        return self.bh[self.idx(x, y)]
+    def roof(self, v_x4, v_y4):
+        return self.bh[self.idx(v_x4, v_y4)]
 
-    def free(self, x, y, z, s):
-        if not (self.bx0 + 3 < x < self.bx1 - 3 and self.by0 + 3 < y < self.by1 - 3):
+    def free(self, v_x5, v_y5, v_z2, v_s):
+        if not (self.bx0 + 3 < v_x5 < self.bx1 - 3 and self.by0 + 3 < v_y5 < self.by1 - 3):
             return False
-        k = self.idx(x, y)
-        if self.bh[k] > z + 1.3:
+        v_k5 = self.idx(v_x5, v_y5)
+        if self.bh[v_k5] > v_z2 + 1.3:
             return False
-        if self.g[k] * 0.01 - z > 1.19 * s + 1.5:
+        if self.g[v_k5] * 0.01 - v_z2 > 1.19 * v_s + 1.5:
             return False
         return True
 
-    def los(self, ax, ay, az, bx, by, bz):
-        dx, dy = bx - ax, by - ay
-        n = int(hypot(dx, dy) / 1.5)
-        bh, g = self.bh, self.g
-        for k in range(1, n):
-            f = k / n
-            i = self.idx(ax + dx * f, ay + dy * f)
-            z = az + (bz - az) * f
-            if bh[i] > z or g[i] * 0.01 > z:
+    def los(self, v_ax2, v_ay2, v_az, v_bx2, v_by2, v_bz):
+        v_dx, v_dy = v_bx2 - v_ax2, v_by2 - v_ay2
+        v_n4 = int(hypot(v_dx, v_dy) / 1.5)
+        v_bh3, v_g3 = self.bh, self.g
+        for v_k6 in range(1, v_n4):
+            v_f3 = v_k6 / v_n4
+            v_i6 = self.idx(v_ax2 + v_dx * v_f3, v_ay2 + v_dy * v_f3)
+            v_z3 = v_az + (v_bz - v_az) * v_f3
+            if v_bh3[v_i6] > v_z3 or v_g3[v_i6] * 0.01 > v_z3:
                 return False
         return True
 
@@ -261,18 +261,18 @@ WEAPON_SCORE = {"lightning": 3.0, "laser": 2.0, "mortar": 0.0, "gun": 1.0}
 class Bot:
     name = "survivor-v11"
 
-    def __init__(self, hello):
-        cfg = hello["config"]
-        self.cfg = cfg
-        self.rng = random.Random(hello.get("seed", 0))
-        self.slot = hello.get("slot", 0)
+    def __init__(self, hello_val):
+        v_cfg = hello_val["config"]
+        self.cfg = v_cfg
+        self.rng = random.Random(hello_val.get("seed", 0))
+        self.slot = hello_val.get("slot", 0)
         self.world = None
-        for d in (hello["map"]["dir"], "/arena"):
+        for v_d2 in (hello_val["map"]["dir"], "/arena"):
             try:
-                self.world = World(d)
+                self.world = World(v_d2)
                 break
-            except Exception as e:  # map is an optimisation; play without it
-                mf.log("map load failed:", d, repr(e))
+            except Exception as v_e:  # map is an optimisation; play without it
+                mf.log("map load failed:", v_d2, repr(v_e))
         self.camp_ang = self.rng.uniform(-PI, PI)
         self.pk = {}      # pickup id -> {kind,pos}
         self.cb = {}      # cube id -> pos
@@ -300,642 +300,642 @@ class Bot:
         self.path_t = -99.0
 
     # ------------------------------------------------------------------ helpers
-    def steer(self, x, y, z, dx, dy, look=7.0):
-        n = hypot(dx, dy)
-        if n < 1e-6:
+    def steer(self, v_x6, v_y6, v_z4, v_dx2, v_dy2, look_val=7.0):
+        v_n5 = hypot(v_dx2, v_dy2)
+        if v_n5 < 1e-6:
             return 0.0, 0.0
-        dx /= n
-        dy /= n
-        w = self.world
-        if w is None:
-            return dx, dy
-        base = math.atan2(dy, dx)
-        offs = [0.0]
-        for k in range(1, 8):
-            offs.append(k * 0.4 * self.bias)
-            offs.append(-k * 0.4 * self.bias)
-        for off in offs:
-            a = base + off
-            ux, uy = math.cos(a), math.sin(a)
-            ok = True
-            for s in (2.5, 5.0, look):
-                if not w.free(x + ux * s, y + uy * s, z, s):
-                    ok = False
+        v_dx2 /= v_n5
+        v_dy2 /= v_n5
+        v_w = self.world
+        if v_w is None:
+            return v_dx2, v_dy2
+        base_val2 = math.atan2(v_dy2, v_dx2)
+        offs_val = [0.0]
+        for v_k7 in range(1, 8):
+            offs_val.append(v_k7 * 0.4 * self.bias)
+            offs_val.append(-v_k7 * 0.4 * self.bias)
+        for v_off in offs_val:
+            v_a5 = base_val2 + v_off
+            v_ux, v_uy = math.cos(v_a5), math.sin(v_a5)
+            v_ok = True
+            for v_s2 in (2.5, 5.0, look_val):
+                if not v_w.free(v_x6 + v_ux * v_s2, v_y6 + v_uy * v_s2, v_z4, v_s2):
+                    v_ok = False
                     break
-            if ok:
+            if v_ok:
                 # side probes
-                px, py = -uy * 2.4, ux * 2.4
-                if not (w.free(x + ux * 5 + px, y + uy * 5 + py, z, 5) and w.free(x + ux * 5 - px, y + uy * 5 - py, z, 5)):
-                    if off != offs[-1]:
+                v_px2, v_py2 = -v_uy * 2.4, v_ux * 2.4
+                if not (v_w.free(v_x6 + v_ux * 5 + v_px2, v_y6 + v_uy * 5 + v_py2, v_z4, 5) and v_w.free(v_x6 + v_ux * 5 - v_px2, v_y6 + v_uy * 5 - v_py2, v_z4, 5)):
+                    if v_off != offs_val[-1]:
                         continue
-                return ux, uy
-        return dx, dy
+                return v_ux, v_uy
+        return v_dx2, v_dy2
 
-    def safe_zone(self, zone, t):
-        if t >= zone["shrink_start"] - 10:
-            return zone["next_center"], zone["next_radius"]
-        return zone["center"], zone["radius"]
+    def safe_zone(self, zone_val, v_t):
+        if v_t >= zone_val["shrink_start"] - 10:
+            return zone_val["next_center"], zone_val["next_radius"]
+        return zone_val["center"], zone_val["radius"]
 
-    def lead(self, sx, sy, sz, tp, tv, speed):
-        tt = 0.0
-        px, py, pz = tp
+    def lead(self, v_sx2, v_sy2, v_sz, v_tp, v_tv, speed_val):
+        v_tt = 0.0
+        v_px3, v_py3, v_pz = v_tp
         for _ in range(3):
-            px = tp[0] + tv[0] * tt
-            py = tp[1] + tv[1] * tt
-            pz = tp[2]
-            d = math.sqrt((px - sx) ** 2 + (py - sy) ** 2 + (pz - sz) ** 2)
-            tt = d / max(speed, 1.0) + 0.075
-        return px, py, pz
+            v_px3 = v_tp[0] + v_tv[0] * v_tt
+            v_py3 = v_tp[1] + v_tv[1] * v_tt
+            v_pz = v_tp[2]
+            v_d3 = math.sqrt((v_px3 - v_sx2) ** 2 + (v_py3 - v_sy2) ** 2 + (v_pz - v_sz) ** 2)
+            v_tt = v_d3 / max(speed_val, 1.0) + 0.075
+        return v_px3, v_py3, v_pz
 
-    def aim_angles(self, sx, sy, sz, tx, ty, tz):
-        yaw = math.atan2(ty - sy, tx - sx)
-        pitch = math.atan2(tz - sz, hypot(tx - sx, ty - sy))
-        m = self.cfg["mech"]
-        return yaw, clamp(pitch, m["min_pitch"], m["max_pitch"])
+    def aim_angles(self, v_sx3, v_sy3, v_sz2, v_tx, v_ty, v_tz):
+        v_yaw = math.atan2(v_ty - v_sy3, v_tx - v_sx3)
+        pitch_val = math.atan2(v_tz - v_sz2, hypot(v_tx - v_sx3, v_ty - v_sy3))
+        v_m = self.cfg["mech"]
+        return v_yaw, clamp(pitch_val, v_m["min_pitch"], v_m["max_pitch"])
 
-    def choose_upgrade(self, offer, me):
-        best, bi = 999, 0
-        for i, c in enumerate(offer["choices"]):
-            cid = c["id"]
-            r = UPGRADE_PRIORITY.index(cid) if cid in UPGRADE_PRIORITY else 50
-            if r < best:
-                best, bi = r, i
-        return bi
+    def choose_upgrade(self, offer_val, v_me):
+        best_val2, v_bi = 999, 0
+        for v_i7, v_c2 in enumerate(offer_val["choices"]):
+            v_cid = v_c2["id"]
+            v_r2 = UPGRADE_PRIORITY.index(v_cid) if v_cid in UPGRADE_PRIORITY else 50
+            if v_r2 < best_val2:
+                best_val2, v_bi = v_r2, v_i7
+        return v_bi
 
-    def ingest(self, obs, me, t):
-        x, y, z = me["pos"]
-        for e in obs["events"]:
-            ty = e.get("type")
-            if ty == "took":
-                self.pk.pop(e["id"], None)
-            elif ty == "take_failed":
-                if e["reason"] in ("gone", "have"):
-                    self.pk.pop(e["id"], None)
+    def ingest(self, v_obs, v_me2, v_t2):
+        v_x7, v_y7, v_z5 = v_me2["pos"]
+        for v_e2 in v_obs["events"]:
+            v_ty2 = v_e2.get("type")
+            if v_ty2 == "took":
+                self.pk.pop(v_e2["id"], None)
+            elif v_ty2 == "take_failed":
+                if v_e2["reason"] in ("gone", "have"):
+                    self.pk.pop(v_e2["id"], None)
                 else:
-                    self.bad[e["id"]] = t + 15
-            elif ty == "dropped":
-                self.bad[e["id"]] = t + 4
-            elif ty == "damaged":
-                self.last_dmg_t = t
-                if e.get("bearing") is not None:
-                    self.alert = (e["bearing"], t)
-        vis_pk = set()
-        for p in obs["pickups"]:
-            vis_pk.add(p["id"])
-            self.pk[p["id"]] = {"kind": p["kind"], "pos": p["pos"]}
-        vis_cb = set(c["id"] for c in obs["cubes"])
-        self.cb = {i: p for i, p in self.cb.items() if i in vis_cb or hypot(p[0] - x, p[1] - y) > 30}
-        for c in obs["cubes"]:
-            self.cb[c["id"]] = c["pos"]
-        vis_cr = set(c["id"] for c in obs["crates"])
-        self.cr = {i: p for i, p in self.cr.items() if i in vis_cr or hypot(p[0] - x, p[1] - y) > 30}
-        for c in obs["crates"]:
-            self.cr[c["id"]] = c["pos"]
-        for i in [i for i, p in self.pk.items() if i not in vis_pk and hypot(p["pos"][0] - x, p["pos"][1] - y) < 28]:
-            del self.pk[i]
+                    self.bad[v_e2["id"]] = v_t2 + 15
+            elif v_ty2 == "dropped":
+                self.bad[v_e2["id"]] = v_t2 + 4
+            elif v_ty2 == "damaged":
+                self.last_dmg_t = v_t2
+                if v_e2.get("bearing") is not None:
+                    self.alert = (v_e2["bearing"], v_t2)
+        vis_pk_val = set()
+        for v_p3 in v_obs["pickups"]:
+            vis_pk_val.add(v_p3["id"])
+            self.pk[v_p3["id"]] = {"kind": v_p3["kind"], "pos": v_p3["pos"]}
+        vis_cb_val = set(v_c3["id"] for v_c3 in v_obs["cubes"])
+        self.cb = {v_i8: v_p3 for v_i8, v_p3 in self.cb.items() if v_i8 in vis_cb_val or hypot(v_p3[0] - v_x7, v_p3[1] - v_y7) > 30}
+        for v_c3 in v_obs["cubes"]:
+            self.cb[v_c3["id"]] = v_c3["pos"]
+        vis_cr_val = set(v_c3["id"] for v_c3 in v_obs["crates"])
+        self.cr = {v_i8: v_p3 for v_i8, v_p3 in self.cr.items() if v_i8 in vis_cr_val or hypot(v_p3[0] - v_x7, v_p3[1] - v_y7) > 30}
+        for v_c3 in v_obs["crates"]:
+            self.cr[v_c3["id"]] = v_c3["pos"]
+        for v_i8 in [v_i8 for v_i8, v_p3 in self.pk.items() if v_i8 not in vis_pk_val and hypot(v_p3["pos"][0] - v_x7, v_p3["pos"][1] - v_y7) < 28]:
+            del self.pk[v_i8]
         # sounds -> alert
-        for s in obs["sounds"]:
-            if s["kind"] in ("gun", "laser", "lightning", "mortar", "laser_charge", "explosion") and s["dist"] != "far":
-                if self.alert is None or t - self.alert[1] > 1.0:
-                    self.alert = (s["bearing"], t - s["age"])
+        for v_s3 in v_obs["sounds"]:
+            if v_s3["kind"] in ("gun", "laser", "lightning", "mortar", "laser_charge", "explosion") and v_s3["dist"] != "far":
+                if self.alert is None or v_t2 - self.alert[1] > 1.0:
+                    self.alert = (v_s3["bearing"], v_t2 - v_s3["age"])
         # stuck history
-        self.hist.append((t, x, y))
-        while self.hist and t - self.hist[0][0] > 1.5:
+        self.hist.append((v_t2, v_x7, v_y7))
+        while self.hist and v_t2 - self.hist[0][0] > 1.5:
             self.hist.pop(0)
 
-    def blocked_id(self, i, t):
-        return self.bad.get(i, -1) > t
+    def blocked_id(self, v_i9, v_t3):
+        return self.bad.get(v_i9, -1) > v_t3
 
-    def nearest_cube(self, x, y, r):
-        best, bp = r, None
-        for p in self.cb.values():
-            d = hypot(p[0] - x, p[1] - y)
-            if d < best:
-                best, bp = d, p
-        return bp
+    def nearest_cube(self, v_x8, v_y8, v_r3):
+        best_val3, v_bp = v_r3, None
+        for v_p4 in self.cb.values():
+            v_d4 = hypot(v_p4[0] - v_x8, v_p4[1] - v_y8)
+            if v_d4 < best_val3:
+                best_val3, v_bp = v_d4, v_p4
+        return v_bp
 
-    def snap(self, p):
-        w = self.world
-        if w is None or getattr(w, "blk", None) is None:
-            return p
-        i, j = w.cell(p[0], p[1])
-        if not w.blk[j * w.gw + i]:
-            return p
-        i, j = w.nearest_open(i, j)
-        return (w.gx0 + (i + 0.5) * w.cs, w.gy0 + (j + 0.5) * w.cs)
+    def snap(self, v_p5):
+        v_w2 = self.world
+        if v_w2 is None or getattr(v_w2, "blk", None) is None:
+            return v_p5
+        v_i10, v_j6 = v_w2.cell(v_p5[0], v_p5[1])
+        if not v_w2.blk[v_j6 * v_w2.gw + v_i10]:
+            return v_p5
+        v_i10, v_j6 = v_w2.nearest_open(v_i10, v_j6)
+        return (v_w2.gx0 + (v_i10 + 0.5) * v_w2.cs, v_w2.gy0 + (v_j6 + 0.5) * v_w2.cs)
 
-    def waypoint(self, x, y, z, goal, t, T0):
+    def waypoint(self, v_x9, v_y9, v_z6, goal_val2, v_t4, v_T0):
         """Next point to walk toward: straight if clear, else follow an A* path."""
-        w = self.world
-        gd = hypot(goal[0] - x, goal[1] - y)
-        if w is None or getattr(w, "blk", None) is None or gd < 6:
-            return goal
-        if gd < 45 and w.line_free(x, y, goal[0], goal[1], z):
+        v_w3 = self.world
+        v_gd2 = hypot(goal_val2[0] - v_x9, goal_val2[1] - v_y9)
+        if v_w3 is None or getattr(v_w3, "blk", None) is None or v_gd2 < 6:
+            return goal_val2
+        if v_gd2 < 45 and v_w3.line_free(v_x9, v_y9, goal_val2[0], goal_val2[1], v_z6):
             self.path = None
-            return goal
+            return goal_val2
         if self.plan_res is not None:
             self.path, self.path_goal, self.path_t = self.plan_res
             self.plan_res = None
-        need = (
+        need_val = (
             self.path is None
-            or hypot(self.path_goal[0] - goal[0], self.path_goal[1] - goal[1]) > 8
-            or t - self.path_t > 5.0
-            or (len(self.path) <= 1 and gd > 15)
-            or t < self.escape_until
+            or hypot(self.path_goal[0] - goal_val2[0], self.path_goal[1] - goal_val2[1]) > 8
+            or v_t4 - self.path_t > 5.0
+            or (len(self.path) <= 1 and v_gd2 > 15)
+            or v_t4 < self.escape_until
         )
-        if need and not self.planning:
+        if need_val and not self.planning:
             self.planning = True
-            sx, sy = x, y
+            v_sx4, v_sy4 = v_x9, v_y9
 
             def job():
                 try:
-                    res = w.plan(sx, sy, goal[0], goal[1])
-                    self.plan_res = (res, goal, t)
+                    v_res = v_w3.plan(v_sx4, v_sy4, goal_val2[0], goal_val2[1])
+                    self.plan_res = (v_res, goal_val2, v_t4)
                 except Exception:
-                    self.plan_res = (None, goal, t)
+                    self.plan_res = (None, goal_val2, v_t4)
                 finally:
                     self.planning = False
 
             if self.sync_plan:
-                job()
+                v_job()
                 self.path, self.path_goal, self.path_t = self.plan_res
                 self.plan_res = None
             else:
-                threading.Thread(target=job, daemon=True).start()
+                threading.Thread(target=v_job, daemon=True).start()
         if not self.path:
-            return goal
+            return goal_val2
         # drop passed waypoints; pick the farthest visible one within 30 m
-        while len(self.path) > 1 and hypot(self.path[0][0] - x, self.path[0][1] - y) < 4.0:
+        while len(self.path) > 1 and hypot(self.path[0][0] - v_x9, self.path[0][1] - v_y9) < 4.0:
             self.path.pop(0)
-        tgt = self.path[0]
-        for k in range(min(len(self.path), 10)):
-            px, py = self.path[k]
-            if hypot(px - x, py - y) > 30:
+        v_tgt = self.path[0]
+        for v_k8 in range(min(len(self.path), 10)):
+            v_px4, v_py4 = self.path[v_k8]
+            if hypot(v_px4 - v_x9, v_py4 - v_y9) > 30:
                 break
-            if w.line_free(x, y, px, py, z):
-                tgt = self.path[k]
-        return tgt
+            if v_w3.line_free(v_x9, v_y9, v_px4, v_py4, v_z6):
+                v_tgt = self.path[v_k8]
+        return v_tgt
 
-    def find_cover(self, x, y, z, threats, zc, zr):
-        w = self.world
-        if w is None or not threats:
+    def find_cover(self, v_x10, v_y10, v_z7, threats_val, v_zc, v_zr):
+        v_w4 = self.world
+        if v_w4 is None or not threats_val:
             return None
-        best, bp = 1e9, None
-        for r in (12.0, 22.0, 32.0):
-            for k in range(12):
-                a = k * PI / 6
-                cx, cy = x + r * math.cos(a), y + r * math.sin(a)
-                if not w.free(cx, cy, z, r):
+        best_val4, v_bp2 = 1e9, None
+        for v_r4 in (12.0, 22.0, 32.0):
+            for v_k9 in range(12):
+                v_a6 = v_k9 * PI / 6
+                v_cx, v_cy = v_x10 + v_r4 * math.cos(v_a6), v_y10 + v_r4 * math.sin(v_a6)
+                if not v_w4.free(v_cx, v_cy, v_z7, v_r4):
                     continue
-                if hypot(cx - zc[0], cy - zc[1]) > zr - 8:
+                if hypot(v_cx - v_zc[0], v_cy - v_zc[1]) > v_zr - 8:
                     continue
-                cz = w.ground(cx, cy)
-                hid = True
-                for tp in threats[:2]:
-                    if w.los(tp[0], tp[1], tp[2] + 8, cx, cy, cz + 4.5):
-                        hid = False
+                v_cz = v_w4.ground(v_cx, v_cy)
+                v_hid = True
+                for v_tp2 in threats_val[:2]:
+                    if v_w4.los(v_tp2[0], v_tp2[1], v_tp2[2] + 8, v_cx, v_cy, v_cz + 4.5):
+                        v_hid = False
                         break
-                if hid:
-                    score = r + 0.1 * hypot(cx - zc[0], cy - zc[1])
-                    if score < best:
-                        best, bp = score, (cx, cy)
-            if bp:
+                if v_hid:
+                    score_val = v_r4 + 0.1 * hypot(v_cx - v_zc[0], v_cy - v_zc[1])
+                    if score_val < best_val4:
+                        best_val4, v_bp2 = score_val, (v_cx, v_cy)
+            if v_bp2:
                 break
-        return bp
+        return v_bp2
 
     # ------------------------------------------------------------------ main
-    def act(self, obs):
-        T0 = time.perf_counter()
-        me = obs["self"]
-        x, y, z = me["pos"]
-        t = obs["t"]
-        tick = obs["tick"]
-        stats = me["stats"]
-        hpf = me["hp"] / me["max_hp"]
-        energy = me["energy"]
-        act = {"tick": tick}
-        mcfg = self.cfg["mech"]
-        w = self.world
-        self.ingest(obs, me, t)
-        if obs["offer"]:
-            act["pick"] = self.choose_upgrade(obs["offer"], me)
+    def act(self, v_obs2):
+        v_T02 = time.perf_counter()
+        v_me3 = v_obs2["self"]
+        v_x11, v_y11, v_z8 = v_me3["pos"]
+        v_t5 = v_obs2["t"]
+        tick_val = v_obs2["tick"]
+        stats_val = v_me3["stats"]
+        v_hpf = v_me3["hp"] / v_me3["max_hp"]
+        energy_val = v_me3["energy"]
+        v_act = {"tick": tick_val}
+        mcfg_val = self.cfg["mech"]
+        v_w5 = self.world
+        self.ingest(v_obs2, v_me3, v_t5)
+        if v_obs2["offer"]:
+            v_act["pick"] = self.choose_upgrade(v_obs2["offer"], v_me3)
 
-        wl = me["weapons"]
-        kinds = [(wk["kind"] if wk else None) for wk in wl]
-        eye_h = stats.get("eye_height", 8.0)
-        mz = stats.get("muzzle_height", 7.0)
-        ex, ey, ez = x, y, z + eye_h
+        v_wl = v_me3["weapons"]
+        kinds_val = [(v_wk["kind"] if v_wk else None) for v_wk in v_wl]
+        eye_h_val = stats_val.get("eye_height", 8.0)
+        v_mz = stats_val.get("muzzle_height", 7.0)
+        v_ex, v_ey, v_ez = v_x11, v_y11, v_z8 + eye_h_val
 
-        zc, zr = self.safe_zone(obs["zone"], t)
-        dzc = hypot(x - zc[0], y - zc[1])
-        outside = dzc > zr - 12 or not me["in_zone"]
-        camp = self.snap((zc[0] + P["camp"] * zr * math.cos(self.camp_ang), zc[1] + P["camp"] * zr * math.sin(self.camp_ang)))
+        v_zc2, v_zr2 = self.safe_zone(v_obs2["zone"], v_t5)
+        v_dzc = hypot(v_x11 - v_zc2[0], v_y11 - v_zc2[1])
+        outside_val = v_dzc > v_zr2 - 12 or not v_me3["in_zone"]
+        camp_val = self.snap((v_zc2[0] + P["camp"] * v_zr2 * math.cos(self.camp_ang), v_zc2[1] + P["camp"] * v_zr2 * math.sin(self.camp_ang)))
 
-        def in_safe(px, py, margin=10.0):
-            return hypot(px - zc[0], py - zc[1]) < zr - margin
+        def in_safe(v_px5, v_py5, margin_val=10.0):
+            return hypot(v_px5 - v_zc2[0], v_py5 - v_zc2[1]) < v_zr2 - margin_val
 
-        enemies = [m for m in obs["mechs"] if m["kind"] == "mech"]
-        npcs = [m for m in obs["mechs"] if m["kind"] == "npc"]
+        enemies_val = [v_m2 for v_m2 in v_obs2["mechs"] if v_m2["kind"] == "mech"]
+        npcs_val = [v_m2 for v_m2 in v_obs2["mechs"] if v_m2["kind"] == "npc"]
 
         # --- choose target
-        tgt = None
-        tgt_vis = False
-        tgt_is_enemy = True
-        best = 1e9
-        for m in enemies:
-            p = m["pos"]
-            d = hypot(p[0] - x, p[1] - y)
-            sc_ = max(1.0, m.get("cubes", 0))
-            tz = p[2] + 4.5 * (1 + 0.05 * m.get("cubes", 0))
-            vis = True if w is None else w.los(ex, ey, ez, p[0], p[1], tz)
-            hpm = m.get("hp", 700) / max(1.0, m.get("max_hp", 1400))
-            score = d * (0.6 + hpm) + (0 if vis else 60)
-            if d > 230:
-                score += 200
-            if score < best:
-                best, tgt, tgt_vis = score, m, vis
-        if tgt is None and hpf > 0.5:
-            for m in npcs:
-                p = m["pos"]
-                d = hypot(p[0] - x, p[1] - y)
-                if d > 60 or not in_safe(p[0], p[1], 0):
+        v_tgt2 = None
+        tgt_vis_val = False
+        tgt_is_enemy_val = True
+        best_val5 = 1e9
+        for v_m2 in enemies_val:
+            v_p6 = v_m2["pos"]
+            v_d5 = hypot(v_p6[0] - v_x11, v_p6[1] - v_y11)
+            v_sc_ = max(1.0, v_m2.get("cubes", 0))
+            v_tz2 = v_p6[2] + 4.5 * (1 + 0.05 * v_m2.get("cubes", 0))
+            v_vis = True if v_w5 is None else v_w5.los(v_ex, v_ey, v_ez, v_p6[0], v_p6[1], v_tz2)
+            v_hpm = v_m2.get("hp", 700) / max(1.0, v_m2.get("max_hp", 1400))
+            score_val2 = v_d5 * (0.6 + v_hpm) + (0 if v_vis else 60)
+            if v_d5 > 230:
+                score_val2 += 200
+            if score_val2 < best_val5:
+                best_val5, v_tgt2, tgt_vis_val = score_val2, v_m2, v_vis
+        if v_tgt2 is None and v_hpf > 0.5:
+            for v_m2 in npcs_val:
+                v_p6 = v_m2["pos"]
+                v_d5 = hypot(v_p6[0] - v_x11, v_p6[1] - v_y11)
+                if v_d5 > 60 or not in_safe_val(v_p6[0], v_p6[1], 0):
                     continue
-                vis = True if w is None else w.los(ex, ey, ez, p[0], p[1], p[2] + 1.7)
-                if vis and d < best:
-                    best, tgt, tgt_vis, tgt_is_enemy = d, m, True, False
+                v_vis = True if v_w5 is None else v_w5.los(v_ex, v_ey, v_ez, v_p6[0], v_p6[1], v_p6[2] + 1.7)
+                if v_vis and v_d5 < best_val5:
+                    best_val5, v_tgt2, tgt_vis_val, tgt_is_enemy_val = v_d5, v_m2, True, False
 
-        move = None     # desired world direction (unit-ish) or None = hold
-        aim = None
-        fire = [False, False]
-        boost = False
-        jump = False
-        label = ""
-        goal = None
-        threats_pos = [m["pos"] for m in enemies]
+        move_val = None     # desired world direction (unit-ish) or None = hold
+        v_aim = None
+        fire_val = [False, False]
+        boost_val = False
+        jump_val = False
+        label_val = ""
+        goal_val3 = None
+        threats_pos_val = [v_m2["pos"] for v_m2 in enemies_val]
 
         # --- incoming projectile / laser dodge vector
-        dodge = None
-        cxm, cym, czm = x, y, z + 4.5
-        tmin = 9.0
-        for pr in obs["projectiles"]:
-            v = pr["vel"]
-            sp2 = v[0] ** 2 + v[1] ** 2 + v[2] ** 2
-            if sp2 < 1:
+        dodge_val = None
+        v_cxm, v_cym, v_czm = v_x11, v_y11, v_z8 + 4.5
+        tmin_val = 9.0
+        for v_pr in v_obs2["projectiles"]:
+            v_v2 = v_pr["vel"]
+            v_sp2 = v_v2[0] ** 2 + v_v2[1] ** 2 + v_v2[2] ** 2
+            if v_sp2 < 1:
                 continue
-            rel = (cxm - pr["pos"][0], cym - pr["pos"][1], czm - pr["pos"][2])
-            if pr["kind"] == "mortar":
+            v_rel = (v_cxm - v_pr["pos"][0], v_cym - v_pr["pos"][1], v_czm - v_pr["pos"][2])
+            if v_pr["kind"] == "mortar":
                 # landing estimate with gravity
-                g = self.cfg["weapons"]["mortar"]["gravity"]
-                px, py, pz = pr["pos"]
-                vx, vy, vz = v
-                tl = 0.0
+                v_g4 = self.cfg["weapons"]["mortar"]["gravity"]
+                v_px5, v_py5, v_pz2 = v_pr["pos"]
+                v_vx, v_vy, v_vz = v_v2
+                v_tl = 0.0
                 for _ in range(40):
-                    tl += 0.1
-                    floor_z = w.ground(px + vx * tl, py + vy * tl) if w else 0.0
-                    if pz + vz * tl - 0.5 * g * tl * tl <= floor_z:
+                    v_tl += 0.1
+                    floor_z_val = v_w5.ground(v_px5 + v_vx * v_tl, v_py5 + v_vy * v_tl) if v_w5 else 0.0
+                    if v_pz2 + v_vz * v_tl - 0.5 * v_g4 * v_tl * v_tl <= floor_z_val:
                         break
-                lx, ly = px + vx * tl, py + vy * tl
-                if hypot(lx - x, ly - y) < 10 and tl < tmin:
-                    tmin = tl
-                    dx, dy = x - lx, y - ly
-                    n = hypot(dx, dy) or 1.0
-                    dodge = (dx / n, dy / n)
+                v_lx, v_ly = v_px5 + v_vx * v_tl, v_py5 + v_vy * v_tl
+                if hypot(v_lx - v_x11, v_ly - v_y11) < 10 and v_tl < tmin_val:
+                    tmin_val = v_tl
+                    v_dx3, v_dy3 = v_x11 - v_lx, v_y11 - v_ly
+                    v_n6 = hypot(v_dx3, v_dy3) or 1.0
+                    dodge_val = (v_dx3 / v_n6, v_dy3 / v_n6)
                 continue
-            tc = (rel[0] * v[0] + rel[1] * v[1] + rel[2] * v[2]) / sp2
-            if tc < 0 or tc > 0.9:
+            v_tc = (v_rel[0] * v_v2[0] + v_rel[1] * v_v2[1] + v_rel[2] * v_v2[2]) / v_sp2
+            if v_tc < 0 or v_tc > 0.9:
                 continue
-            mx, my, mzz = rel[0] - v[0] * tc, rel[1] - v[1] * tc, rel[2] - v[2] * tc
-            if math.sqrt(mx * mx + my * my + mzz * mzz) < 4.2 and tc < tmin:
-                tmin = tc
-                n = hypot(mx, my)
-                if n < 0.5:
-                    dodge = (-v[1] / (hypot(v[0], v[1]) or 1), v[0] / (hypot(v[0], v[1]) or 1))
+            v_mx, v_my, v_mzz = v_rel[0] - v_v2[0] * v_tc, v_rel[1] - v_v2[1] * v_tc, v_rel[2] - v_v2[2] * v_tc
+            if math.sqrt(v_mx * v_mx + v_my * v_my + v_mzz * v_mzz) < 4.2 and v_tc < tmin_val:
+                tmin_val = v_tc
+                v_n6 = hypot(v_mx, v_my)
+                if v_n6 < 0.5:
+                    dodge_val = (-v_v2[1] / (hypot(v_v2[0], v_v2[1]) or 1), v_v2[0] / (hypot(v_v2[0], v_v2[1]) or 1))
                 else:
-                    dodge = (mx / n, my / n)
+                    dodge_val = (v_mx / v_n6, v_my / v_n6)
         # laser telegraph from enemies aiming at me
-        for m in enemies:
-            if m.get("charging"):
-                p = m["pos"]
-                bearing = math.atan2(y - p[1], x - p[0])
-                if abs(wrap(m["aim"][0] - bearing)) < 0.25:
-                    ax, ay = math.cos(m["aim"][0]), math.sin(m["aim"][0])
-                    px, py = -ay, ax
-                    side = 1 if (x - p[0]) * px + (y - p[1]) * py >= 0 else -1
-                    dodge = (px * side, py * side)
-                    tmin = 0.0
+        for v_m2 in enemies_val:
+            if v_m2.get("charging"):
+                v_p6 = v_m2["pos"]
+                bearing_val = math.atan2(v_y11 - v_p6[1], v_x11 - v_p6[0])
+                if abs(wrap(v_m2["aim"][0] - bearing_val)) < 0.25:
+                    v_ax3, v_ay3 = math.cos(v_m2["aim"][0]), math.sin(v_m2["aim"][0])
+                    v_px5, v_py5 = -v_ay3, v_ax3
+                    side_val = 1 if (v_x11 - v_p6[0]) * v_px5 + (v_y11 - v_p6[1]) * v_py5 >= 0 else -1
+                    dodge_val = (v_px5 * side_val, v_py5 * side_val)
+                    tmin_val = 0.0
 
         # --- upkeep: pickups in reach
-        near_take = None
-        for i, p in self.pk.items():
-            if self.blocked_id(i, t):
+        near_take_val = None
+        for v_i11, v_p6 in self.pk.items():
+            if self.blocked_id(v_i11, v_t5):
                 continue
-            kd = p["kind"]
-            sc_new = WEAPON_SCORE.get(kd, 0)
-            if sc_new <= 0 or kd in kinds:
+            v_kd = v_p6["kind"]
+            sc_new_val = WEAPON_SCORE.get(v_kd, 0)
+            if sc_new_val <= 0 or v_kd in kinds_val:
                 continue
-            cur = WEAPON_SCORE.get(kinds[1], 0) if kinds[1] else 0
-            if len(kinds) > 1 and kinds[1] is not None and sc_new <= cur:
+            v_cur2 = WEAPON_SCORE.get(kinds_val[1], 0) if kinds_val[1] else 0
+            if len(kinds_val) > 1 and kinds_val[1] is not None and sc_new_val <= v_cur2:
                 continue
-            dd = hypot(p["pos"][0] - x, p["pos"][1] - y)
-            if dd < 3.6 and abs(p["pos"][2] - z) < 3.5:
-                near_take = (i, kd)
-        if near_take and not (tgt and tgt_vis and hypot(tgt["pos"][0] - x, tgt["pos"][1] - y) < 40 and False):
-            act["take"] = near_take[0]
-            if len(wl) > 1 and wl[1] is not None:
-                act["drop"] = 1
+            v_dd = hypot(v_p6["pos"][0] - v_x11, v_p6["pos"][1] - v_y11)
+            if v_dd < 3.6 and abs(v_p6["pos"][2] - v_z8) < 3.5:
+                near_take_val = (v_i11, v_kd)
+        if near_take_val and not (v_tgt2 and tgt_vis_val and hypot(v_tgt2["pos"][0] - v_x11, v_tgt2["pos"][1] - v_y11) < 40 and False):
+            v_act["take"] = near_take_val[0]
+            if len(v_wl) > 1 and v_wl[1] is not None:
+                v_act["drop"] = 1
 
         # --- combat
-        if tgt is not None:
-            tp = tgt["pos"]
-            tv = tgt.get("vel", [0, 0, 0])
-            d = hypot(tp[0] - x, tp[1] - y)
-            scale = 1 + 0.05 * tgt.get("cubes", 0) if tgt_is_enemy else 1.0
-            tcz = tp[2] + (4.5 * scale if tgt_is_enemy else 1.7)
-            gun = wl[0] if wl and wl[0] and wl[0]["kind"] == "gun" else None
-            gspeed = gun["stats"]["speed"] if gun else 252.0
-            sx, sy, sz = x, y, z + mz
-            lp = self.lead(sx, sy, sz, (tp[0], tp[1], tcz), tv, gspeed)
-            yaw, pitch = self.aim_angles(sx, sy, sz, lp[0], lp[1], lp[2])
-            aim = [yaw, pitch]
-            yerr = abs(wrap(yaw - me["aim"][0]))
-            perr = abs(pitch - me["aim"][1])
-            has_lightning = "lightning" in kinds
-            has_laser = "laser" in kinds
-            if has_lightning and energy > 12:
-                want = P["want_l"]
-            elif has_laser:
-                want = P["want_lz"]
+        if v_tgt2 is not None:
+            v_tp3 = v_tgt2["pos"]
+            v_tv2 = v_tgt2.get("vel", [0, 0, 0])
+            v_d5 = hypot(v_tp3[0] - v_x11, v_tp3[1] - v_y11)
+            scale_val = 1 + 0.05 * v_tgt2.get("cubes", 0) if tgt_is_enemy_val else 1.0
+            v_tcz = v_tp3[2] + (4.5 * scale_val if tgt_is_enemy_val else 1.7)
+            v_gun = v_wl[0] if v_wl and v_wl[0] and v_wl[0]["kind"] == "gun" else None
+            gspeed_val = v_gun["stats"]["speed"] if v_gun else 252.0
+            v_sx5, v_sy5, v_sz3 = v_x11, v_y11, v_z8 + v_mz
+            v_lp = self.lead(v_sx5, v_sy5, v_sz3, (v_tp3[0], v_tp3[1], v_tcz), v_tv2, gspeed_val)
+            v_yaw2, pitch_val2 = self.aim_angles(v_sx5, v_sy5, v_sz3, v_lp[0], v_lp[1], v_lp[2])
+            v_aim = [v_yaw2, pitch_val2]
+            yerr_val = abs(wrap(v_yaw2 - v_me3["aim"][0]))
+            perr_val = abs(pitch_val2 - v_me3["aim"][1])
+            has_lightning_val = "lightning" in kinds_val
+            has_laser_val = "laser" in kinds_val
+            if has_lightning_val and energy_val > 12:
+                want_val = P["want_l"]
+            elif has_laser_val:
+                want_val = P["want_lz"]
             else:
-                want = P["want_g"]
-            n_close = sum(1 for m_ in enemies if hypot(m_["pos"][0] - x, m_["pos"][1] - y) < 70)
-            outnumbered = tgt_is_enemy and n_close >= P["multi_n"] and hpf < P["multi_hp"]
-            weak = outnumbered or tgt_is_enemy and hpf < P["weak"] and (len(enemies) >= 2 or tgt.get("hp", 700) / max(1, tgt.get("max_hp", 1400)) > hpf)
-            tol = max(0.025, 0.7 * math.atan2(2.5, max(d, 5.0)))
-            slew_y = stats.get("turn_rate", 4.0) * 0.05 * 0.9
-            slew_p = stats.get("pitch_rate", 3.0) * 0.05 * 0.9
-            tol_g = max(tol, slew_y)
-            tol_gp = max(tol + 0.03, slew_p)
+                want_val = P["want_g"]
+            n_close_val = sum(1 for v_m_ in enemies_val if hypot(v_m_["pos"][0] - v_x11, v_m_["pos"][1] - v_y11) < 70)
+            outnumbered_val = tgt_is_enemy_val and n_close_val >= P["multi_n"] and v_hpf < P["multi_hp"]
+            weak_val = outnumbered_val or tgt_is_enemy_val and v_hpf < P["weak"] and (len(enemies_val) >= 2 or v_tgt2.get("hp", 700) / max(1, v_tgt2.get("max_hp", 1400)) > v_hpf)
+            v_tol = max(0.025, 0.7 * math.atan2(2.5, max(v_d5, 5.0)))
+            slew_y_val = stats_val.get("turn_rate", 4.0) * 0.05 * 0.9
+            slew_p_val = stats_val.get("pitch_rate", 3.0) * 0.05 * 0.9
+            tol_g_val = max(v_tol, slew_y_val)
+            tol_gp_val = max(v_tol + 0.03, slew_p_val)
             # firing
-            for si, wk in enumerate(wl):
-                if not wk:
+            for v_si2, v_wk in enumerate(v_wl):
+                if not v_wk:
                     continue
-                kd = wk["kind"]
-                st = wk["stats"]
-                if kd == "gun":
-                    if wk.get("ammo", 1) <= 0:
-                        act["reload"] = True
-                    elif tgt_vis and d < st["range"] * 0.92 and yerr < tol_g and perr < tol_gp:
-                        fire[si] = True
-                elif kd == "lightning":
-                    if tgt_vis and d < st["range"] * 0.95 and yerr < 0.2 and energy > 5:
-                        fire[si] = True
-                elif kd == "laser":
-                    full = st["charge"]
-                    ch = wk.get("charge", 0.0)
-                    if tgt_vis and d < st["range"] * 0.9 and (d > 18 or ch > 0):
-                        if ch > 0:
-                            if ch >= full - 0.05 and yerr < tol_g:
-                                fire[si] = False
+                v_kd = v_wk["kind"]
+                v_st2 = v_wk["stats"]
+                if v_kd == "gun":
+                    if v_wk.get("ammo", 1) <= 0:
+                        v_act["reload"] = True
+                    elif tgt_vis_val and v_d5 < v_st2["range"] * 0.92 and yerr_val < tol_g_val and perr_val < tol_gp_val:
+                        fire_val[v_si2] = True
+                elif v_kd == "lightning":
+                    if tgt_vis_val and v_d5 < v_st2["range"] * 0.95 and yerr_val < 0.2 and energy_val > 5:
+                        fire_val[v_si2] = True
+                elif v_kd == "laser":
+                    full_val = v_st2["charge"]
+                    v_ch = v_wk.get("charge", 0.0)
+                    if tgt_vis_val and v_d5 < v_st2["range"] * 0.9 and (v_d5 > 18 or v_ch > 0):
+                        if v_ch > 0:
+                            if v_ch >= full_val - 0.05 and yerr_val < tol_g_val:
+                                fire_val[v_si2] = False
                             else:
-                                fire[si] = True
-                        elif wk["cooldown"] <= 0.05:
-                            fire[si] = True
+                                fire_val[v_si2] = True
+                        elif v_wk["cooldown"] <= 0.05:
+                            fire_val[v_si2] = True
                     else:
-                        fire[si] = False
+                        fire_val[v_si2] = False
             # movement
-            hpt = tgt.get("hp", 700) / max(1.0, tgt.get("max_hp", 1400))
-            if weak:
-                if self.cover is None or t - self.cover_t > 0.7:
-                    self.cover = self.find_cover(x, y, z, threats_pos, zc, zr) if time.perf_counter() - T0 < 0.02 else self.cover
-                    self.cover_t = t
-                if self.cover and hypot(self.cover[0] - x, self.cover[1] - y) > 3:
-                    goal = self.cover
-                    boost = energy > 30
-                    label = "retreat"
+            v_hpt = v_tgt2.get("hp", 700) / max(1.0, v_tgt2.get("max_hp", 1400))
+            if weak_val:
+                if self.cover is None or v_t5 - self.cover_t > 0.7:
+                    self.cover = self.find_cover(v_x11, v_y11, v_z8, threats_pos_val, v_zc2, v_zr2) if time.perf_counter() - v_T02 < 0.02 else self.cover
+                    self.cover_t = v_t5
+                if self.cover and hypot(self.cover[0] - v_x11, self.cover[1] - v_y11) > 3:
+                    goal_val3 = self.cover
+                    boost_val = energy_val > 30
+                    label_val = "retreat"
                 else:
-                    move = (0.0, 0.0)
-                    label = "hide"
-            elif not tgt_vis:
-                if tgt_is_enemy and hpf > P["hold_hp"] and d < P["adv_d"] and in_safe(tp[0], tp[1], 0):
-                    goal = (tp[0], tp[1])
-                    label = "advance"
+                    move_val = (0.0, 0.0)
+                    label_val = "hide"
+            elif not tgt_vis_val:
+                if tgt_is_enemy_val and v_hpf > P["hold_hp"] and v_d5 < P["adv_d"] and in_safe_val(v_tp3[0], v_tp3[1], 0):
+                    goal_val3 = (v_tp3[0], v_tp3[1])
+                    label_val = "advance"
                 else:
-                    cn = self.nearest_cube(x, y, 45.0)
-                    if cn is not None and hpf > 0.3:
-                        goal = (cn[0], cn[1])
-                        label = "cube!"
+                    v_cn = self.nearest_cube(v_x11, v_y11, 45.0)
+                    if v_cn is not None and v_hpf > 0.3:
+                        goal_val3 = (v_cn[0], v_cn[1])
+                        label_val = "cube!"
                     else:
-                        move = (0.0, 0.0)
-                        label = "ambush"
+                        move_val = (0.0, 0.0)
+                        label_val = "ambush"
             else:
-                label = "fight"
-                if t >= self.sflip:
+                label_val = "fight"
+                if v_t5 >= self.sflip:
                     self.ssign = -self.ssign if self.rng.random() < P["strafe_keep"] else self.ssign
-                    self.sflip = t + self.rng.uniform(P["flip_lo"], P["flip_hi"])
-                rx, ry = (tp[0] - x) / (d or 1), (tp[1] - y) / (d or 1)
-                radial = clamp((d - want) / 15.0, -1.0, 1.0)
-                if not tgt_is_enemy:
-                    radial = clamp((d - 25) / 10.0, -1.0, 1.0)
-                mx = radial * rx + P["amp"] * self.ssign * (-ry)
-                my = radial * ry + P["amp"] * self.ssign * rx
-                move = (mx, my)
-                cn = self.nearest_cube(x, y, P["cube_r"])
-                if cn is not None:
-                    cdx, cdy = cn[0] - x, cn[1] - y
-                    cdn = hypot(cdx, cdy) or 1.0
-                    move = (mx + P["cube_w"] * cdx / cdn, my + P["cube_w"] * cdy / cdn)
-            if dodge is not None and tmin < P["dodge_t"]:
-                move = dodge
-                goal = None
-                boost = boost
-            if outside and tgt_is_enemy:
-                goal = zc
-                move = None
-                boost = not me["in_zone"] and energy > 5
+                    self.sflip = v_t5 + self.rng.uniform(P["flip_lo"], P["flip_hi"])
+                v_rx, v_ry = (v_tp3[0] - v_x11) / (v_d5 or 1), (v_tp3[1] - v_y11) / (v_d5 or 1)
+                radial_val = clamp((v_d5 - want_val) / 15.0, -1.0, 1.0)
+                if not tgt_is_enemy_val:
+                    radial_val = clamp((v_d5 - 25) / 10.0, -1.0, 1.0)
+                v_mx = radial_val * v_rx + P["amp"] * self.ssign * (-v_ry)
+                v_my = radial_val * v_ry + P["amp"] * self.ssign * v_rx
+                move_val = (v_mx, v_my)
+                v_cn = self.nearest_cube(v_x11, v_y11, P["cube_r"])
+                if v_cn is not None:
+                    v_cdx, v_cdy = v_cn[0] - v_x11, v_cn[1] - v_y11
+                    v_cdn = hypot(v_cdx, v_cdy) or 1.0
+                    move_val = (v_mx + P["cube_w"] * v_cdx / v_cdn, v_my + P["cube_w"] * v_cdy / v_cdn)
+            if dodge_val is not None and tmin_val < P["dodge_t"]:
+                move_val = dodge_val
+                goal_val3 = None
+                boost_val = boost_val
+            if outside_val and tgt_is_enemy_val:
+                goal_val3 = v_zc2
+                move_val = None
+                boost_val = not v_me3["in_zone"] and energy_val > 5
         else:
             # ---- no target: roam
-            if self.alert and t - self.alert[1] < 1.5:
-                aim = [self.alert[0], 0.0]
+            if self.alert and v_t5 - self.alert[1] < 1.5:
+                v_aim = [self.alert[0], 0.0]
             # flee unseen damage
-            if self.alert and t - self.last_dmg_t < 1.5 and t - self.alert[1] < 1.5:
-                a = self.alert[0] + PI + 0.8 * self.ssign
-                goal = (x + 40 * math.cos(a), y + 40 * math.sin(a))
-                boost = energy > 40
-                label = "flee"
-            if dodge is not None and tmin < 0.9:
-                move = dodge
-                goal = None
+            if self.alert and v_t5 - self.last_dmg_t < 1.5 and v_t5 - self.alert[1] < 1.5:
+                v_a7 = self.alert[0] + PI + 0.8 * self.ssign
+                goal_val3 = (v_x11 + 40 * math.cos(v_a7), v_y11 + 40 * math.sin(v_a7))
+                boost_val = energy_val > 40
+                label_val = "flee"
+            if dodge_val is not None and tmin_val < 0.9:
+                move_val = dodge_val
+                goal_val3 = None
             # reload if idle
-            gun = wl[0] if wl and wl[0] and wl[0]["kind"] == "gun" else None
-            if gun and gun.get("ammo", 99) < self.cfg["weapons"]["gun"]["mag"] * 0.5:
-                act["reload"] = True
-            if goal is None and move is None:
-                if outside:
-                    goal = zc
-                    boost = not me["in_zone"] and energy > 5
-                    label = "zone"
+            v_gun = v_wl[0] if v_wl and v_wl[0] and v_wl[0]["kind"] == "gun" else None
+            if v_gun and v_gun.get("ammo", 99) < self.cfg["weapons"]["gun"]["mag"] * 0.5:
+                v_act["reload"] = True
+            if goal_val3 is None and move_val is None:
+                if outside_val:
+                    goal_val3 = v_zc2
+                    boost_val = not v_me3["in_zone"] and energy_val > 5
+                    label_val = "zone"
                 else:
                     # supply drop
-                    cand = None
-                    for dr in obs["drops"]:
-                        dd = hypot(dr["pos"][0] - x, dr["pos"][1] - y)
-                        if in_safe(dr["pos"][0], dr["pos"][1], 6) and dd < 220 and dr["lands_in"] <= dd / 11.0 + 6 and hpf > 0.2:
-                            if dr.get("holder") not in (None, self.slot) and dd > 25:
+                    cand_val = None
+                    for v_dr in v_obs2["drops"]:
+                        v_dd = hypot(v_dr["pos"][0] - v_x11, v_dr["pos"][1] - v_y11)
+                        if in_safe_val(v_dr["pos"][0], v_dr["pos"][1], 6) and v_dd < 220 and v_dr["lands_in"] <= v_dd / 11.0 + 6 and v_hpf > 0.2:
+                            if v_dr.get("holder") not in (None, self.slot) and v_dd > 25:
                                 continue
-                            if cand is None or dd < cand[0]:
-                                cand = (dd, dr)
-                    if cand:
-                        dr = cand[1]
-                        goal = (dr["pos"][0], dr["pos"][1])
-                        label = "drop"
-                        if cand[0] < dr["radius"] * 0.5:
-                            move = (0.0, 0.0)
-                            goal = None
-                    if goal is None and move is None:
+                            if cand_val is None or v_dd < cand_val[0]:
+                                cand_val = (v_dd, v_dr)
+                    if cand_val:
+                        v_dr = cand_val[1]
+                        goal_val3 = (v_dr["pos"][0], v_dr["pos"][1])
+                        label_val = "drop"
+                        if cand_val[0] < v_dr["radius"] * 0.5:
+                            move_val = (0.0, 0.0)
+                            goal_val3 = None
+                    if goal_val3 is None and move_val is None:
                         # weapon pickup
-                        wants = []
-                        for i, p in self.pk.items():
-                            if self.blocked_id(i, t):
+                        wants_val = []
+                        for v_i11, v_p6 in self.pk.items():
+                            if self.blocked_id(v_i11, v_t5):
                                 continue
-                            kd = p["kind"]
-                            scn = WEAPON_SCORE.get(kd, 0)
-                            if scn <= 0 or kd in kinds:
+                            v_kd = v_p6["kind"]
+                            v_scn = WEAPON_SCORE.get(v_kd, 0)
+                            if v_scn <= 0 or v_kd in kinds_val:
                                 continue
-                            cur = WEAPON_SCORE.get(kinds[1], 0) if len(kinds) > 1 and kinds[1] else 0
-                            if scn <= cur:
+                            v_cur2 = WEAPON_SCORE.get(kinds_val[1], 0) if len(kinds_val) > 1 and kinds_val[1] else 0
+                            if v_scn <= v_cur2:
                                 continue
-                            pp = p["pos"]
-                            dd = hypot(pp[0] - x, pp[1] - y)
-                            if dd > 160 or not in_safe(pp[0], pp[1], 5):
+                            v_pp = v_p6["pos"]
+                            v_dd = hypot(v_pp[0] - v_x11, v_pp[1] - v_y11)
+                            if v_dd > 160 or not in_safe_val(v_pp[0], v_pp[1], 5):
                                 continue
-                            if pp[2] - (w.ground(pp[0], pp[1]) if w else 0) > 4:
+                            if v_pp[2] - (v_w5.ground(v_pp[0], v_pp[1]) if v_w5 else 0) > 4:
                                 continue
-                            wants.append((dd - 20 * scn, i, pp))
-                        if wants:
-                            wants.sort()
-                            _, i, pp = wants[0]
-                            first = self.goal_since.setdefault(i, t)
-                            if t - first > 40:
-                                self.bad[i] = t + 90
+                            wants_val.append((v_dd - 20 * v_scn, v_i11, v_pp))
+                        if wants_val:
+                            wants_val.sort()
+                            _, v_i11, v_pp = wants_val[0]
+                            first_val = self.goal_since.setdefault(v_i11, v_t5)
+                            if v_t5 - first_val > 40:
+                                self.bad[v_i11] = v_t5 + 90
                             else:
-                                goal = (pp[0], pp[1])
-                                label = "loot"
-                    if goal is None and move is None and hpf > 0.3:
+                                goal_val3 = (v_pp[0], v_pp[1])
+                                label_val = "loot"
+                    if goal_val3 is None and move_val is None and v_hpf > 0.3:
                         # cubes
-                        cands = []
-                        for i, p in self.cb.items():
-                            if self.blocked_id(i, t):
+                        cands_val = []
+                        for v_i11, v_p6 in self.cb.items():
+                            if self.blocked_id(v_i11, v_t5):
                                 continue
-                            dd = hypot(p[0] - x, p[1] - y)
-                            if dd < 90 and in_safe(p[0], p[1], 5):
-                                cands.append((dd, i, p))
-                        if cands:
-                            cands.sort()
-                            dd, i, p = cands[0]
-                            first = self.goal_since.setdefault(i, t)
-                            if t - first > 25:
-                                self.bad[i] = t + 90
+                            v_dd = hypot(v_p6[0] - v_x11, v_p6[1] - v_y11)
+                            if v_dd < 90 and in_safe_val(v_p6[0], v_p6[1], 5):
+                                cands_val.append((v_dd, v_i11, v_p6))
+                        if cands_val:
+                            cands_val.sort()
+                            v_dd, v_i11, v_p6 = cands_val[0]
+                            first_val = self.goal_since.setdefault(v_i11, v_t5)
+                            if v_t5 - first_val > 25:
+                                self.bad[v_i11] = v_t5 + 90
                             else:
-                                goal = (p[0], p[1])
-                                label = "cube"
-                    if goal is None and move is None and hpf > 0.6 and t < 330:
+                                goal_val3 = (v_p6[0], v_p6[1])
+                                label_val = "cube"
+                    if goal_val3 is None and move_val is None and v_hpf > 0.6 and v_t5 < 330:
                         # crates: approach and shoot
-                        cands = []
-                        for i, p in self.cr.items():
-                            if self.blocked_id(i, t):
+                        cands_val = []
+                        for v_i11, v_p6 in self.cr.items():
+                            if self.blocked_id(v_i11, v_t5):
                                 continue
-                            dd = hypot(p[0] - x, p[1] - y)
-                            if dd < 70 and in_safe(p[0], p[1], 5) and p[2] - (w.ground(p[0], p[1]) if w else 0) < 4:
-                                cands.append((dd, i, p))
-                        if cands:
-                            cands.sort()
-                            dd, i, p = cands[0]
-                            first = self.goal_since.setdefault(i, t)
-                            if t - first > 20:
-                                self.bad[i] = t + 120
+                            v_dd = hypot(v_p6[0] - v_x11, v_p6[1] - v_y11)
+                            if v_dd < 70 and in_safe_val(v_p6[0], v_p6[1], 5) and v_p6[2] - (v_w5.ground(v_p6[0], v_p6[1]) if v_w5 else 0) < 4:
+                                cands_val.append((v_dd, v_i11, v_p6))
+                        if cands_val:
+                            cands_val.sort()
+                            v_dd, v_i11, v_p6 = cands_val[0]
+                            first_val = self.goal_since.setdefault(v_i11, v_t5)
+                            if v_t5 - first_val > 20:
+                                self.bad[v_i11] = v_t5 + 120
                             else:
-                                cz = p[2] + 1.2
-                                yaw, pitch = self.aim_angles(x, y, z + mz, p[0], p[1], cz)
-                                aim = [yaw, pitch]
-                                vis = True if w is None else w.los(ex, ey, ez, p[0], p[1], cz)
-                                if dd > 22 or not vis:
-                                    goal = (p[0], p[1])
+                                v_cz2 = v_p6[2] + 1.2
+                                v_yaw2, pitch_val2 = self.aim_angles(v_x11, v_y11, v_z8 + v_mz, v_p6[0], v_p6[1], v_cz2)
+                                v_aim = [v_yaw2, pitch_val2]
+                                v_vis = True if v_w5 is None else v_w5.los(v_ex, v_ey, v_ez, v_p6[0], v_p6[1], v_cz2)
+                                if v_dd > 22 or not v_vis:
+                                    goal_val3 = (v_p6[0], v_p6[1])
                                 else:
-                                    move = (0.0, 0.0)
-                                    perr = abs(pitch - me["aim"][1])
-                                    if abs(wrap(yaw - me["aim"][0])) < 0.08 and perr < 0.1:
-                                        for si, wk in enumerate(wl):
-                                            if wk and wk["kind"] == "gun" and wk.get("ammo", 1) > 0 and dd < 150:
-                                                fire[si] = True
-                                            if wk and wk["kind"] == "lightning" and dd < wk["stats"]["range"] * 0.9 and energy > 30:
-                                                fire[si] = True
-                                label = "crate"
-                    if goal is None and move is None:
-                        dc = hypot(camp[0] - x, camp[1] - y)
-                        if dc > 8:
-                            goal = camp
-                            label = "camp-go"
+                                    move_val = (0.0, 0.0)
+                                    perr_val = abs(pitch_val2 - v_me3["aim"][1])
+                                    if abs(wrap(v_yaw2 - v_me3["aim"][0])) < 0.08 and perr_val < 0.1:
+                                        for v_si2, v_wk in enumerate(v_wl):
+                                            if v_wk and v_wk["kind"] == "gun" and v_wk.get("ammo", 1) > 0 and v_dd < 150:
+                                                fire_val[v_si2] = True
+                                            if v_wk and v_wk["kind"] == "lightning" and v_dd < v_wk["stats"]["range"] * 0.9 and energy_val > 30:
+                                                fire_val[v_si2] = True
+                                label_val = "crate"
+                    if goal_val3 is None and move_val is None:
+                        v_dc = hypot(camp_val[0] - v_x11, camp_val[1] - v_y11)
+                        if v_dc > 8:
+                            goal_val3 = camp_val
+                            label_val = "camp-go"
                         else:
-                            move = (0.0, 0.0)
-                            label = "camp"
+                            move_val = (0.0, 0.0)
+                            label_val = "camp"
 
         # --- turn goal into move
-        if goal is not None and move is None:
-            wp = self.waypoint(x, y, z, goal, t, T0)
-            gdx, gdy = wp[0] - x, wp[1] - y
-            gd = hypot(gdx, gdy)
-            if hypot(goal[0] - x, goal[1] - y) < 1.2 or gd < 0.5:
-                move = (0.0, 0.0)
+        if goal_val3 is not None and move_val is None:
+            v_wp = self.waypoint(v_x11, v_y11, v_z8, goal_val3, v_t5, v_T02)
+            v_gdx, v_gdy = v_wp[0] - v_x11, v_wp[1] - v_y11
+            v_gd3 = hypot(v_gdx, v_gdy)
+            if hypot(goal_val3[0] - v_x11, goal_val3[1] - v_y11) < 1.2 or v_gd3 < 0.5:
+                move_val = (0.0, 0.0)
             else:
-                move = (gdx / gd, gdy / gd)
+                move_val = (v_gdx / v_gd3, v_gdy / v_gd3)
 
         # stuck detection (only when we wanted to move)
-        stuck = False
-        if self.hist and move and hypot(*move) > 0.5 and t - self.hist[0][0] > 1.2:
-            h0 = self.hist[0]
-            if hypot(x - h0[1], y - h0[2]) < 2.0 and not (fire[0] or fire[1]):
-                stuck = True
-        if stuck and t > self.escape_until:
+        stuck_val = False
+        if self.hist and move_val and hypot(*move_val) > 0.5 and v_t5 - self.hist[0][0] > 1.2:
+            v_h02 = self.hist[0]
+            if hypot(v_x11 - v_h02[1], v_y11 - v_h02[2]) < 2.0 and not (fire_val[0] or fire_val[1]):
+                stuck_val = True
+        if stuck_val and v_t5 > self.escape_until:
             self.bias = -self.bias
-            self.escape_until = t + 1.0
+            self.escape_until = v_t5 + 1.0
             self.escape_dir = self.rng.uniform(-PI, PI)
             self.hist = []
-        if t < self.escape_until:
-            move = (math.cos(self.escape_dir), math.sin(self.escape_dir))
-            jump = True
-            boost = energy > 25
-            label = "unstick"
+        if v_t5 < self.escape_until:
+            move_val = (math.cos(self.escape_dir), math.sin(self.escape_dir))
+            jump_val = True
+            boost_val = energy_val > 25
+            label_val = "unstick"
 
-        if move is None:
-            move = (0.0, 0.0)
-        mx, my = move
-        if hypot(mx, my) > 1e-6:
-            mx, my = self.steer(x, y, z, mx, my)
-            if label in ("hide", "camp", "ambush"):
-                mx, my = 0.0, 0.0
+        if move_val is None:
+            move_val = (0.0, 0.0)
+        v_mx, v_my = move_val
+        if hypot(v_mx, v_my) > 1e-6:
+            v_mx, v_my = self.steer(v_x11, v_y11, v_z8, v_mx, v_my)
+            if label_val in ("hide", "camp", "ambush"):
+                v_mx, v_my = 0.0, 0.0
         else:
-            mx = my = 0.0
+            v_mx = v_my = 0.0
 
         # --- aim default
-        if aim is None:
-            if hypot(mx, my) > 0.1:
-                aim = [math.atan2(my, mx), 0.0]
+        if v_aim is None:
+            if hypot(v_mx, v_my) > 0.1:
+                v_aim = [math.atan2(v_my, v_mx), 0.0]
             else:
                 self.sweep += 0.12
-                aim = [wrap(me["aim"][0] + 0.12), 0.0]
+                v_aim = [wrap(v_me3["aim"][0] + 0.12), 0.0]
 
-        act["move"] = [round(mx, 4), round(my, 4)]
-        act["aim"] = [round(aim[0], 4), round(aim[1], 4)]
-        act["fire"] = fire
-        act["boost"] = bool(boost)
-        act["jump"] = bool(jump)
-        self.last_move = (mx, my)
+        v_act["move"] = [round(v_mx, 4), round(v_my, 4)]
+        v_act["aim"] = [round(v_aim[0], 4), round(v_aim[1], 4)]
+        v_act["fire"] = fire_val
+        v_act["boost"] = bool(boost_val)
+        v_act["jump"] = bool(jump_val)
+        self.last_move = (v_mx, v_my)
 
         # prune bad
-        if tick % 100 == 0:
-            self.bad = {k: v for k, v in self.bad.items() if v > t}
-        mf.draw.label(f"{label} hp{me['hp']:.0f}")
-        return act
+        if tick_val % 100 == 0:
+            self.bad = {v_k10: v_v2 for v_k10, v_v2 in self.bad.items() if v_v2 > v_t5}
+        mf.draw.label(f"{label_val} hp{v_me3['hp']:.0f}")
+        return v_act
 
 
 mf.run(Bot)
