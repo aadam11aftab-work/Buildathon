@@ -257,7 +257,7 @@ except Exception:
     _ENV = {}
 P.update(_ENV)
 # v5 "hide and survive" defaults: applied unless BOT_PARAMS sets v5=0; anything set explicitly in BOT_PARAMS wins.
-V5 = dict(v5_open=0, loot_r=160.0, farm_until=999.0, v5_pos=1, v5_hide=1, v5_fight=0, weak=0.35, adv_d=70.0, cube_w=3.5, cube_r=60.0, cube_roam=200.0)
+V5 = dict(v5_open=1, loot_r=0.0, farm_until=0.0, v5_pos=1, v5_hide=1, v5_fight=1, weak=0.6, adv_d=0.0, cube_w=0.0, cube_r=0.0, cube_roam=0.0, opp_d=0.0, corner_d=30.0)
 if _ENV.get("v5", 1):
     for _k, _v in V5.items():
         if _k not in _ENV:
@@ -273,7 +273,7 @@ def wscore(kind):
 
 
 class Bot:
-    name = "survivor-v7"
+    name = "survivor-v8"
 
     def __init__(self, hello):
         cfg = hello["config"]
